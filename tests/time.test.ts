@@ -10,9 +10,23 @@ describe('parseExcelDate', () => {
   it('缺年份 mm-dd 补当前年', () => {
     expect(parseExcelDate('08-10', now)).toEqual({ date: '2026-08-10', ok: true })
     expect(parseExcelDate('12-31', now)).toEqual({ date: '2026-12-31', ok: true })
+    expect(parseExcelDate('08-30', now)).toEqual({ date: '2026-08-30', ok: true })
   })
   it('Date 对象', () => {
     expect(parseExcelDate(new Date(2026, 7, 3), now)).toEqual({ date: '2026-08-03', ok: true })
+  })
+  it('Excel 日期序列号', () => {
+    expect(parseExcelDate(0, now)).toEqual({ date: '1899-12-30', ok: true })
+    expect(parseExcelDate(45292, now)).toEqual({ date: '2024-01-01', ok: true })
+  })
+  it('不存在的日历日期 → ok=false', () => {
+    expect(parseExcelDate('2026-02-30', now).ok).toBe(false)
+    expect(parseExcelDate('2026-02-29', now).ok).toBe(false)
+    expect(parseExcelDate('2026-04-31', now).ok).toBe(false)
+    expect(parseExcelDate('02-30', now).ok).toBe(false)
+  })
+  it('闰年 2024-02-29 → ok', () => {
+    expect(parseExcelDate('2024-02-29', now)).toEqual({ date: '2024-02-29', ok: true })
   })
   it('非法值返回 ok=false', () => {
     expect(parseExcelDate('abc', now).ok).toBe(false)
@@ -51,5 +65,10 @@ describe('computeHours', () => {
   it('任一为空 → null', () => {
     expect(computeHours(null, '15:00')).toBeNull()
     expect(computeHours('13:00', null)).toBeNull()
+  })
+  it('越界时间 → null', () => {
+    expect(computeHours('99:99', '99:99')).toBeNull()
+    expect(computeHours('24:00', '01:00')).toBeNull()
+    expect(computeHours('13:60', '15:00')).toBeNull()
   })
 })
