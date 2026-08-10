@@ -30,19 +30,33 @@ export function detectColumns(headers: string[]): Partial<Record<ColumnKey, numb
   headers.forEach((h, i) => {
     if (claimed.has(i)) return
     const cell = String(h ?? '').trim().replace(/\s/g, '')
+    let bestKey: ColumnKey | null = null
+    let bestLen = 0
     for (const key of Object.keys(ALIASES) as ColumnKey[]) {
-      if (map[key] === null && ALIASES[key].some(a => cell.includes(a))) {
-        map[key] = i
+      if (map[key] !== null) continue
+      for (const a of ALIASES[key]) {
+        if (cell.includes(a) && a.length > bestLen) {
+          bestKey = key
+          bestLen = a.length
+        }
       }
+    }
+    if (bestKey !== null) {
+      map[bestKey] = i
+      claimed.add(i)
     }
   })
   return map
 }
 
+function isBlank(v: unknown): boolean {
+  return v === null || v === undefined || (typeof v === 'string' && v.trim() === '')
+}
+
 function parseRate(v: unknown): number | null {
-  if (v === null || v === undefined || v === '') return null
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
-  const s = String(v).trim().replace(/[¥￥元,\s]/g, '')
+  if (typeof v !== 'string') return null
+  const s = v.trim().replace(/[¥￥元,\s]/g, '')
   if (!s) return null
   const n = Number(s)
   return Number.isFinite(n) ? n : null
@@ -79,7 +93,8 @@ export function buildPreviewFromRows(
     const courseTypeName = String(get('courseTypeName') ?? '').trim()
     const student = String(get('student') ?? '').trim()
     const matched = existing.courseTypes.find(c => c.name === courseTypeName)
-    const rate = parseRate(get('rate')) ?? matched?.defaultRate ?? null
+    const rawRate = get('rate')
+    const rate = isBlank(rawRate) ? (matched?.defaultRate ?? null) : parseRate(rawRate)
     const dateRes = parseExcelDate(get('date'))
     const timeRes = parseTimeRange(get('time'))
     const hours = computeHours(timeRes.startTime, timeRes.endTime) ?? matched?.defaultHours ?? null

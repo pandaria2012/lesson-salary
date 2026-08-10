@@ -23,6 +23,16 @@ describe('detectColumns', () => {
     expect(map.courseTypeName).toBe(1)
     expect(map.rate).toBeNull()
   })
+  it('子串歧义：课程单价（元）归 rate，课程类型归 courseTypeName', () => {
+    const map = detectColumns(['课程单价（元）', '课程类型'])
+    expect(map.rate).toBe(0)
+    expect(map.courseTypeName).toBe(1)
+  })
+  it('子串歧义：单个歧义表头只归属一个 key（最长别名优先）', () => {
+    const map = detectColumns(['课程单价（元）'])
+    expect(map.rate).toBe(0)
+    expect(map.courseTypeName).toBeNull()
+  })
 })
 
 describe('buildPreviewFromRows', () => {
@@ -67,6 +77,19 @@ describe('buildPreviewFromRows', () => {
     expect(parsed2.rate).toBeNull()
     expect(parsed2.issues).toContain('缺少时薪')
     expect(parsed2.selected).toBe(false)
+  })
+  it('单价非空但解析失败 → 不回退默认时薪且不勾选', () => {
+    const rows = [header, ['1对1', '200元/小时', '张三', '2026-08-11', '13-15']]
+    const parsed = buildPreviewFromRows(rows, { courseTypes, records })[0]
+    expect(parsed.rate).toBeNull()
+    expect(parsed.issues).toContain('缺少时薪')
+    expect(parsed.selected).toBe(false)
+  })
+  it('单价纯空白仍回退默认时薪', () => {
+    const rows = [header, ['1对1', '   ', '张三', '2026-08-11', '13-15']]
+    const parsed = buildPreviewFromRows(rows, { courseTypes, records })[0]
+    expect(parsed.rate).toBe(200)
+    expect(parsed.issues).not.toContain('缺少时薪')
   })
   it('空行忽略、列顺序无关', () => {
     const rows = [
