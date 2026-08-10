@@ -77,3 +77,14 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .btn-ghost { background: var(--card); color: var(--primary); border: 1px solid var(--primary); width: 100%; margin-bottom: 12px; }
 .warn { color: #b06000; font-size: 14px; }
 .ok { color: #137333; font-size: 14px; }
+
+.summary-card { text-align: center; margin-bottom: 12px; }
+.sum-main { font-size: 15px; }
+.sum-main strong { display: block; font-size: 30px; color: var(--primary); margin-top: 4px; }
+.sum-sub { display: flex; justify-content: center; gap: 14px; color: var(--muted); font-size: 13px; margin-top: 8px; }
+.group-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.g-left { display: flex; flex-direction: column; }
+.g-right { font-weight: 600; }
+.group-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.group-tabs button { flex: 1; background: var(--card); color: var(--text); border: 1px solid var(--border); }
+.group-tabs button.active { border-color: var(--primary); color: var(--primary); }
