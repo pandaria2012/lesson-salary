@@ -26,3 +26,28 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 @media (prefers-color-scheme: dark) {
   :root { --bg: #111315; --card: #1c1f23; --text: #eceff2; --muted: #9aa1aa; --border: #2a2f35; }
 }
+.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; display: flex; align-items: flex-end; }
+.sheet { background: var(--card); width: 100%; max-width: 480px; margin: 0 auto; border-radius: 16px 16px 0 0; padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + var(--safe-bottom)) calc(16px + env(safe-area-inset-left)); max-height: 85vh; overflow-y: auto; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.sheet-head h2 { margin: 0 0 12px; font-size: 18px; }
+.btn-close { background: var(--muted); min-height: 44px; padding: 0 14px; }
+.sheet-body .field { margin-bottom: 14px; }
+.sheet-body label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+.sheet-body .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.error { color: var(--danger); font-size: 14px; }
+
+.page { max-width: 480px; margin: 0 auto; padding: 12px 12px calc(var(--tab-height) + var(--safe-bottom) + 24px); }
+.page-head { display: flex; justify-content: space-between; align-items: center; }
+.page-head h1 { font-size: 22px; }
+.tag { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--border); font-size: 13px; }
+.tag.ok { background: #e6f4ea; color: #137333; }
+.tag.off { background: #fce8e6; color: #c5221f; }
+.muted { color: var(--muted); font-size: 14px; }
+.row-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-danger { background: var(--danger); }
+.empty { color: var(--muted); text-align: center; margin-top: 40px; }
+.course-type { margin-bottom: 10px; }
+
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tab-height) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--card); border-top: 1px solid var(--border); display: flex; max-width: 480px; margin: 0 auto; z-index: 40; }
+.tabbar button { flex: 1; background: none; color: var(--muted); min-height: 44px; border-radius: 0; }
+.tabbar button.active { color: var(--primary); font-weight: 600; }
