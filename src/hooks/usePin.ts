@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { generateSalt, hashPin, verifyPin } from '../lib/pin'
 import { getSetting, setSetting } from '../db/repo'
+import { db } from '../db/db'
 
 const SALT_KEY = 'pin_salt'
 const HASH_KEY = 'pin_hash'
+const PIN_PATTERN = /^[0-9]{4,6}$/
 
 export function usePin() {
   const [enabled, setEnabled] = useState(false)
@@ -13,17 +15,26 @@ export function usePin() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
     const refresh = async () => {
-      const hash = await getSetting<string>(HASH_KEY)
-      setEnabled(!!hash)
-      setLocked(!!hash)
-      setReady(true)
+      try {
+        const hash = await getSetting<string>(HASH_KEY)
+        setEnabled(!!hash)
+        setLocked(!!hash)
+      } catch (err) {
+        console.warn('PIN: 读取设置失败', err)
+      } finally {
+        setReady(true)
+      }
     }
     refresh()
     const onVis = () => {
       if (document.visibilityState === 'hidden') {
         timer = setTimeout(async () => {
-          const hash = await getSetting<string>(HASH_KEY)
-          if (hash) setLocked(true)
+          try {
+            const hash = await getSetting<string>(HASH_KEY)
+            if (hash) setLocked(true)
+          } catch (err) {
+            console.warn('PIN: 后台锁定检查失败', err)
+          }
         }, 60000)
       } else if (timer) {
         clearTimeout(timer)
@@ -38,6 +49,7 @@ export function usePin() {
   }, [])
 
   const setup = useCallback(async (pin: string) => {
+    if (!PIN_PATTERN.test(pin)) throw new Error('PIN 必须为 4~6 位数字')
     const salt = generateSalt()
     const hash = await hashPin(pin, salt)
     await setSetting(SALT_KEY, salt)
@@ -56,6 +68,7 @@ export function usePin() {
   }, [])
 
   const change = useCallback(async (oldPin: string, newPin: string) => {
+    if (!PIN_PATTERN.test(newPin)) return false
     const ok = await unlock(oldPin)
     if (!ok) return false
     await setup(newPin)
@@ -65,8 +78,7 @@ export function usePin() {
   const disable = useCallback(async (oldPin: string) => {
     const ok = await unlock(oldPin)
     if (!ok) return false
-    await setSetting(HASH_KEY, undefined)
-    await setSetting(SALT_KEY, undefined)
+    await db.settings.bulkDelete([HASH_KEY, SALT_KEY])
     setEnabled(false)
     return true
   }, [unlock])

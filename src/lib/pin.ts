@@ -19,7 +19,28 @@ export function hashPin(pin: string, salt: string): Promise<string> {
   return pbkdf2(pin, salt)
 }
 
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+  }
+  return bytes
+}
+
+/** 恒定时间比较两个 hex 字符串（长度/格式不一致直接 false）。 */
+export function constantTimeEqual(hexA: string, hexB: string): boolean {
+  if (hexA.length !== hexB.length || hexA.length % 2 !== 0) return false
+  if (!/^[0-9a-f]+$/i.test(hexA) || !/^[0-9a-f]+$/i.test(hexB)) return false
+  const a = hexToBytes(hexA)
+  const b = hexToBytes(hexB)
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i]
+  }
+  return diff === 0
+}
+
 export async function verifyPin(pin: string, salt: string, hash: string): Promise<boolean> {
   const h = await pbkdf2(pin, salt)
-  return h === hash
+  return constantTimeEqual(h, hash)
 }
