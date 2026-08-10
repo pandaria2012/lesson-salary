@@ -27,8 +27,8 @@ export function downloadWorkbook(wb: XLSX.WorkBook, filename: string): void {
 export function createExportAllWorkbook(records: LessonRecord[], courseTypes: CourseType[]): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()
   const recRows = [
-    ['课程类型', '课程单价', '学生名称', '上课日期', '上课时间', '状态', '备注', '创建时间', 'id'],
-    ...records.map(r => [r.courseTypeName, r.rate, r.student, r.date, r.startTime && r.endTime ? `${r.startTime}-${r.endTime}` : '', r.status, r.note, r.createdAt, r.id])
+    ['课程类型', '课程单价', '学生名称', '上课日期', '上课时间', '课时', '状态', '备注', '创建时间', 'id'],
+    ...records.map(r => [r.courseTypeName, r.rate, r.student, r.date, r.startTime && r.endTime ? `${r.startTime}-${r.endTime}` : '', r.hours, r.status, r.note, r.createdAt, r.id])
   ]
   const typeRows = [
     ['名称', '教学形式', '状态', '默认课时', '默认时薪', '创建时间'],
@@ -82,6 +82,8 @@ export async function parseBackupWorkbook(buffer: ArrayBuffer): Promise<{ record
       return k === null ? undefined : r[k]
     }
     const timeRes = parseTimeRange(g('上课时间'))
+    const hoursCell = g('课时')
+    const hoursNum = hoursCell === undefined || hoursCell === null || hoursCell === '' ? NaN : Number(hoursCell)
     records.push({
       id: String(g('id') ?? `bk-${i}-${Date.now()}`),
       courseTypeId: null,
@@ -92,7 +94,7 @@ export async function parseBackupWorkbook(buffer: ArrayBuffer): Promise<{ record
       date: String(g('上课日期') ?? ''),
       startTime: timeRes.startTime,
       endTime: timeRes.endTime,
-      hours: computeHours(timeRes.startTime, timeRes.endTime),
+      hours: Number.isFinite(hoursNum) ? hoursNum : computeHours(timeRes.startTime, timeRes.endTime),
       status: String(g('状态') ?? 'normal') === 'cancelled' ? 'cancelled' : 'normal',
       source: 'import',
       batchId: null,

@@ -24,12 +24,35 @@ describe('createImportTemplateWorkbook', () => {
 })
 
 describe('createExportAllWorkbook / parseBackupWorkbook', () => {
+  it('全量导出表头含课时列', () => {
+    const rows = sheetRows(createExportAllWorkbook([rec], [ct]), '上课记录')
+    expect(rows[0]).toEqual(['课程类型', '课程单价', '学生名称', '上课日期', '上课时间', '课时', '状态', '备注', '创建时间', 'id'])
+    expect(rows[1]).toEqual(['1对1', 200, '张三', '2026-08-10', '13:00-15:00', 2, 'normal', '备注A', '2026-08-10T00:00:00.000Z', 'r1'])
+  })
+
   it('导出再解析可还原记录与课程类型', async () => {
     const wb = createExportAllWorkbook([rec], [ct])
     const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
     const back = await parseBackupWorkbook(buf)
     expect(back.courseTypes).toHaveLength(1)
     expect(back.records[0]).toMatchObject({ id: 'r1', student: '张三', rate: 200, hours: 2, note: '备注A', status: 'normal' })
+  })
+
+  it('解析优先读「课时」列，缺失/无效时回退时间计算', async () => {
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+      ['课程类型', '课程单价', '学生名称', '上课日期', '上课时间', '课时'],
+      ['1对1', 200, '李四', '2026-08-11', '', 3],
+      ['1对1', 200, '王五', '2026-08-12', '13:00-15:00', 'abc']
+    ]), '上课记录')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+      ['名称', '教学形式', '状态', '默认课时', '默认时薪', '创建时间'],
+      ['1对1', '一对一', 'enabled', 2, 200, 't']
+    ]), '课程类型')
+    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    const back = await parseBackupWorkbook(buf)
+    expect(back.records[0].hours).toBe(3)
+    expect(back.records[1].hours).toBe(2)
   })
 })
 
