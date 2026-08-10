@@ -1,0 +1,44 @@
+import { describe, expect, it } from 'vitest'
+import * as XLSX from 'xlsx'
+import { createExportAllWorkbook, createImportTemplateWorkbook, createMonthlyWorkbook, parseBackupWorkbook } from '../src/lib/export'
+import type { CourseType, LessonRecord } from '../src/types'
+
+function sheetRows(wb: XLSX.WorkBook, name: string): unknown[][] {
+  return XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[name], { header: 1, defval: '' })
+}
+
+const ct: CourseType = { id: 'ct1', name: '1对1', type: '一对一', status: 'enabled', defaultHours: 2, defaultRate: 200, createdAt: '2026-08-10T00:00:00.000Z' }
+const rec: LessonRecord = {
+  id: 'r1', courseTypeId: 'ct1', courseTypeName: '1对1', courseTypeKind: '一对一',
+  rate: 200, student: '张三', date: '2026-08-10', startTime: '13:00', endTime: '15:00',
+  hours: 2, status: 'normal', source: 'import', batchId: null, note: '备注A', createdAt: '2026-08-10T00:00:00.000Z'
+}
+
+describe('createImportTemplateWorkbook', () => {
+  it('表头 + 2 行示例', () => {
+    const rows = sheetRows(createImportTemplateWorkbook(), '上课记录')
+    expect(rows[0]).toEqual(['课程类型', '课程单价', '学生名称', '上课日期', '上课时间'])
+    expect(rows.length).toBe(3)
+    expect(String(rows[1][2])).toContain('示例')
+  })
+})
+
+describe('createExportAllWorkbook / parseBackupWorkbook', () => {
+  it('导出再解析可还原记录与课程类型', async () => {
+    const wb = createExportAllWorkbook([rec], [ct])
+    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    const back = await parseBackupWorkbook(buf)
+    expect(back.courseTypes).toHaveLength(1)
+    expect(back.records[0]).toMatchObject({ id: 'r1', student: '张三', rate: 200, hours: 2, note: '备注A', status: 'normal' })
+  })
+})
+
+describe('createMonthlyWorkbook', () => {
+  it('含汇总与明细两个 sheet', () => {
+    const wb = createMonthlyWorkbook([rec], [{ label: '张三', hours: 2, amount: 400, count: 1 }])
+    expect(wb.SheetNames).toEqual(['汇总', '明细'])
+    const rows = sheetRows(wb, '汇总')
+    expect(rows[0]).toEqual(['分组', '课次', '课时', '金额'])
+    expect(rows[1]).toEqual(['张三', 1, 2, 400])
+  })
+})
