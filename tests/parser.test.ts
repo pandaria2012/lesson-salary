@@ -78,12 +78,20 @@ describe('buildPreviewFromRows', () => {
     expect(parsed2.issues).toContain('缺少时薪')
     expect(parsed2.selected).toBe(false)
   })
-  it('单价非空但解析失败 → 不回退默认时薪且不勾选', () => {
-    const rows = [header, ['1对1', '200元/小时', '张三', '2026-08-11', '13-15']]
+  it('单价完全无数字 → null 且不勾选', () => {
+    const rows = [header, ['1对1', 'abc', '张三', '2026-08-11', '13-15']]
     const parsed = buildPreviewFromRows(rows, { courseTypes, records })[0]
     expect(parsed.rate).toBeNull()
     expect(parsed.issues).toContain('缺少时薪')
     expect(parsed.selected).toBe(false)
+  })
+
+  it('带单位单价可解析：200元/小时 → 200', () => {
+    const rows = [header, ['1对1', '200元/小时', '张三', '2026-08-11', '13-15']]
+    const parsed = buildPreviewFromRows(rows, { courseTypes, records })[0]
+    expect(parsed.rate).toBe(200)
+    expect(parsed.issues).not.toContain('缺少时薪')
+    expect(parsed.selected).toBe(true)
   })
   it('单价纯空白仍回退默认时薪', () => {
     const rows = [header, ['1对1', '   ', '张三', '2026-08-11', '13-15']]
@@ -99,6 +107,14 @@ describe('buildPreviewFromRows', () => {
     ]
     const parsed = buildPreviewFromRows(rows, { courseTypes, records })
     expect(parsed).toHaveLength(1)
+  })
+  it('同一文件内重复行：第二行 isDuplicate 且不勾选', () => {
+    const rows = [header, ['1对1', 200, '张三', '2026-08-11', '13:00-15:00'], ['1对1', 200, '张三', '2026-08-11', '13:00-15:00']]
+    const parsed = buildPreviewFromRows(rows, { courseTypes, records })
+    expect(parsed[0].isDuplicate).toBe(false)
+    expect(parsed[0].selected).toBe(true)
+    expect(parsed[1].isDuplicate).toBe(true)
+    expect(parsed[1].selected).toBe(false)
   })
 })
 

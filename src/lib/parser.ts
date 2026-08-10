@@ -56,7 +56,7 @@ function isBlank(v: unknown): boolean {
 function parseRate(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
   if (typeof v !== 'string') return null
-  const s = v.trim().replace(/[¥￥元,\s]/g, '')
+  const s = v.trim().replace(/[^0-9.,-]/g, '').replace(/,/g, '')
   if (!s) return null
   const n = Number(s)
   return Number.isFinite(n) ? n : null
@@ -86,6 +86,7 @@ export function buildPreviewFromRows(
   const headers = (rows[0] ?? []).map(h => String(h ?? ''))
   const col = detectColumns(headers)
   const out: ParsedRow[] = []
+  const seen = new Set<string>()
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i]
     if (!row || row.every(c => c === null || c === undefined || String(c).trim() === '')) continue
@@ -107,11 +108,16 @@ export function buildPreviewFromRows(
     if (hours === null) issues.push('无法确定课时')
     if (rate === null) issues.push('缺少时薪')
 
-    const isDuplicate = dateRes.date !== null && existing.records.some(r =>
+    const dupKey = dateRes.date !== null
+      ? `${dateRes.date}|${student}|${timeRes.startTime}|${timeRes.endTime}|${courseTypeName}`
+      : null
+    const isDuplicateInFile = dupKey !== null && seen.has(dupKey)
+    if (dupKey !== null) seen.add(dupKey)
+    const isDuplicate = isDuplicateInFile || (dateRes.date !== null && existing.records.some(r =>
       r.date === dateRes.date && r.student === student &&
       r.startTime === timeRes.startTime && r.endTime === timeRes.endTime &&
       r.courseTypeName === courseTypeName && r.status === 'normal'
-    )
+    ))
     const isSample = student.startsWith('示例')
     const isNewCourseType = courseTypeName !== '' && !matched
 

@@ -15,7 +15,7 @@ export default function App() {
   const [tab, setTab] = useState<TabKey>('summary')
   if (!pin.ready) return <main className="app" />
   if (pin.enabled && pin.locked) {
-    return <main className="app"><PinLock onUnlock={pin.unlock} /></main>
+    return <main className="app"><PinLock onUnlock={pin.unlock} onResetAll={pin.resetAll} /></main>
   }
   return (
     <div className="app">

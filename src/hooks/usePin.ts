@@ -83,5 +83,16 @@ export function usePin() {
     return true
   }, [unlock])
 
-  return { enabled, locked, ready, setup, unlock, change, disable }
+  const resetAll = useCallback(async () => {
+    await db.transaction('rw', [db.records, db.courseTypes, db.batches, db.settings], async () => {
+      await db.records.clear()
+      await db.courseTypes.clear()
+      await db.batches.clear()
+      await db.settings.bulkDelete([HASH_KEY, SALT_KEY])
+    })
+    setEnabled(false)
+    setLocked(false)
+  }, [])
+
+  return { enabled, locked, ready, setup, unlock, change, disable, resetAll }
 }

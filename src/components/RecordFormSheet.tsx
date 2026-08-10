@@ -37,8 +37,8 @@ export default function RecordFormSheet({ open, initial, courseTypes, onClose, o
   const ct = useMemo(() => courseTypes.find(c => c.id === courseTypeId) ?? null, [courseTypeId, courseTypes])
 
   const computedHours = useMemo(
-    () => computeHours(start || null, end || null) ?? (start && !end ? ct?.defaultHours ?? null : null),
-    [start, end, ct]
+    () => computeHours(start || null, end || null) ?? (start && !end ? ct?.defaultHours ?? null : null) ?? (initial?.hours ?? null),
+    [start, end, ct, initial?.hours]
   )
 
   const submit = () => {
