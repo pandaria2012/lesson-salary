@@ -51,3 +51,17 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tab-height) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--card); border-top: 1px solid var(--border); display: flex; max-width: 480px; margin: 0 auto; z-index: 40; }
 .tabbar button { flex: 1; background: none; color: var(--muted); min-height: 44px; border-radius: 0; }
 .tabbar button.active { color: var(--primary); font-weight: 600; }
+
+.month-picker { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0 16px; }
+.month-picker input[type=month] { width: 160px; text-align: center; }
+.month-picker button { background: var(--card); color: var(--text); border: 1px solid var(--border); min-width: 44px; }
+
+.record { margin-bottom: 10px; }
+.record.cancelled { opacity: .6; }
+.rec-top { display: flex; align-items: center; gap: 10px; }
+.rec-time { color: var(--muted); font-size: 14px; }
+.rec-amount { margin-left: auto; font-weight: 600; }
+.rec-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.rec-cancel { color: var(--danger); font-size: 13px; margin-top: 4px; }
+
+.fab { position: fixed; right: 20px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 16px); width: 56px; height: 56px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
