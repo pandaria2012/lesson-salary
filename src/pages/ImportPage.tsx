@@ -13,14 +13,27 @@ export default function ImportPage() {
   const [lastBatch, setLastBatch] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
 
+  const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err))
+
   const pickFile = async (file: File) => {
     setMsg('')
-    const buffer = await file.arrayBuffer()
-    const [courseTypes, records] = await Promise.all([listCourseTypes(), listRecords()])
-    const p = await parseWorkbook(buffer, file.name, { courseTypes, records })
-    setSameFile(!!(await getBatchByHash(p.fileHash)))
-    setPreview(p)
-    setLastBatch(null)
+    setBusy(true)
+    try {
+      const buffer = await file.arrayBuffer()
+      if (inputRef.current) inputRef.current.value = ''
+      const [courseTypes, records] = await Promise.all([listCourseTypes(), listRecords()])
+      const p = await parseWorkbook(buffer, file.name, { courseTypes, records })
+      setSameFile(!!(await getBatchByHash(p.fileHash)))
+      setPreview(p)
+      setLastBatch(null)
+    } catch (err) {
+      if (inputRef.current) inputRef.current.value = ''
+      setPreview(null)
+      setSameFile(false)
+      setMsg(`导入失败：${errMsg(err)}`)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const confirm = async () => {
@@ -31,6 +44,8 @@ export default function ImportPage() {
       setLastBatch(res.batchId)
       setMsg(`已导入 ${res.inserted} 条记录`)
       setPreview(null)
+    } catch (err) {
+      setMsg(`导入失败：${errMsg(err)}`)
     } finally {
       setBusy(false)
     }
@@ -38,10 +53,14 @@ export default function ImportPage() {
   }
 
   const undo = async () => {
-    if (!lastBatch) return
-    const n = await deleteBatch(lastBatch)
-    setLastBatch(null)
-    setMsg(`已撤销导入，删除 ${n} 条记录`)
+    if (!lastBatch || busy) return
+    try {
+      const n = await deleteBatch(lastBatch)
+      setLastBatch(null)
+      setMsg(`已撤销导入，删除 ${n} 条记录`)
+    } catch (err) {
+      setMsg(`撤销失败：${errMsg(err)}`)
+    }
   }
 
   return (
@@ -63,8 +82,8 @@ export default function ImportPage() {
           </button>
         </>
       )}
-      {lastBatch && <button className="btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={undo}>撤销上一批导入</button>}
-      {msg && <p className="ok">{msg}</p>}
+      {lastBatch && <button className="btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={undo} disabled={busy}>撤销上一批导入</button>}
+      {msg && <p className={msg.startsWith('导入失败') || msg.startsWith('撤销失败') ? 'error' : 'ok'}>{msg}</p>}
     </section>
   )
 }
