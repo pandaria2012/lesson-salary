@@ -6,6 +6,7 @@ import CourseTypesPage from './pages/CourseTypesPage'
 import ImportPage from './pages/ImportPage'
 import RecordsPage from './pages/RecordsPage'
 import SummaryPage from './pages/SummaryPage'
+import SettingsPage from './pages/SettingsPage'
 
 export type TabKey = 'summary' | 'records' | 'import' | 'courseTypes' | 'settings'
 
@@ -22,7 +23,7 @@ export default function App() {
       {tab === 'summary' && <SummaryPage />}
       {tab === 'records' && <RecordsPage />}
       {tab === 'import' && <ImportPage />}
-      {tab === 'settings' && <div className="page"><h1>设置（后续任务）</h1></div>}
+      {tab === 'settings' && <SettingsPage />}
       <TabBar tab={tab} onChange={setTab} />
     </div>
   )
