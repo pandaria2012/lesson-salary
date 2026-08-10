@@ -3,6 +3,7 @@ import TabBar from './components/TabBar'
 import { usePin } from './hooks/usePin'
 import PinLock from './components/PinLock'
 import CourseTypesPage from './pages/CourseTypesPage'
+import ImportPage from './pages/ImportPage'
 import RecordsPage from './pages/RecordsPage'
 
 export type TabKey = 'summary' | 'records' | 'import' | 'courseTypes' | 'settings'
@@ -19,7 +20,7 @@ export default function App() {
       {tab === 'courseTypes' && <CourseTypesPage />}
       {tab === 'summary' && <div className="page"><h1>汇总（后续任务）</h1></div>}
       {tab === 'records' && <RecordsPage />}
-      {tab === 'import' && <div className="page"><h1>导入（后续任务）</h1></div>}
+      {tab === 'import' && <ImportPage />}
       {tab === 'settings' && <div className="page"><h1>设置（后续任务）</h1></div>}
       <TabBar tab={tab} onChange={setTab} />
     </div>

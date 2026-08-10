@@ -65,3 +65,15 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .rec-cancel { color: var(--danger); font-size: 13px; margin-top: 4px; }
 
 .fab { position: fixed; right: 20px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 16px); width: 56px; height: 56px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+
+.preview-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.preview-row input[type=checkbox] { width: 22px; height: 22px; margin-top: 4px; }
+.preview-body { flex: 1; }
+.tag.new { background: #e8f0fe; color: #1a73e8; }
+.tag.sample { background: #fef7e0; color: #b06000; }
+.tag.dup { background: #fce8e6; color: #c5221f; }
+.issues { color: var(--danger); font-size: 13px; margin-top: 4px; }
+
+.btn-ghost { background: var(--card); color: var(--primary); border: 1px solid var(--primary); width: 100%; margin-bottom: 12px; }
+.warn { color: #b06000; font-size: 14px; }
+.ok { color: #137333; font-size: 14px; }
