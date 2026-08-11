@@ -19,6 +19,7 @@ export default function RecordCard({ record, onEdit, onToggleCancel, onDelete }:
       <div className="rec-sub">{record.student} · {record.courseTypeName}{record.hours !== null ? ` · ${fmtHours(record.hours)}小时` : ''}</div>
       {record.status === 'cancelled' && <div className="rec-cancel">已取消（不计薪）</div>}
       <div className="row-actions" onClick={e => e.stopPropagation()}>
+        <button onClick={onEdit}>编辑</button>
         <button onClick={onToggleCancel}>{record.status === 'normal' ? '取消' : '恢复'}</button>
         <button className="btn-danger" onClick={onDelete}>删除</button>
       </div>

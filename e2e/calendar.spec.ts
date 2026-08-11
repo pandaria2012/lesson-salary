@@ -33,7 +33,7 @@ test('记录页：日历展示每日课次/金额，点击弹当天明细', asyn
   await addRecord(page, '张三', '2026-08-10', '13:00', '15:00')
   await addRecord(page, '李四', '2026-08-12', '10:00', '11:00')
 
-  await expect(page.locator('.calendar')).toBeVisible() // 默认即为日历视图
+  await expect(page.locator('.calendar')).toBeHidden() // 记录页默认列表视图
   await page.getByRole('button', { name: '日历', exact: true }).click()
   await expect(page.locator('.calendar')).toBeVisible()
   await expect(page.locator('.cal-cell[data-date="2026-08-10"]')).toContainText('¥400')

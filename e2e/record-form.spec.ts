@@ -49,3 +49,18 @@ test('补录表单：课程类型联动自动带出时薪/时长快捷/学生历
 
   await page.getByRole('button', { name: '关闭', exact: true }).click()
 })
+
+test('记录卡片：编辑按钮可修改记录', async ({ page }) => {
+  await page.goto('/')
+  await addCourseType(page)
+  await addRecord(page)
+
+  // 列表上的「编辑」按钮打开编辑弹层
+  await page.getByRole('button', { name: '编辑', exact: true }).click()
+  await expect(page.getByText('编辑上课记录')).toBeVisible()
+
+  // 修改学生名称并保存
+  await page.locator('.sheet input[placeholder*="张三"]').fill('张小三')
+  await page.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(page.locator('.record', { hasText: '张小三' })).toBeVisible()
+})
