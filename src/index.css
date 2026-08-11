@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #f5f6f8;
   --card: #ffffff;
   --text: #1a1a1a;
@@ -24,7 +25,7 @@ button:active { opacity: .8; }
 input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); width: 100%; }
 .card { background: var(--card); border-radius: 14px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #111315; --card: #1c1f23; --text: #eceff2; --muted: #9aa1aa; --border: #2a2f35; }
+  :root { color-scheme: dark; --bg: #111315; --card: #1c1f23; --text: #eceff2; --muted: #9aa1aa; --border: #2a2f35; }
 }
 .sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; display: flex; align-items: flex-end; }
 .sheet { background: var(--card); width: 100%; max-width: 480px; margin: 0 auto; border-radius: 16px 16px 0 0; padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + var(--safe-bottom)) calc(16px + env(safe-area-inset-left)); max-height: 85vh; overflow-y: auto; }

@@ -19,7 +19,7 @@ export default function RecordsPage() {
   const { items: courseTypes } = useCourseTypes()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<LessonRecord | null>(null)
-  const [view, setView] = useState<ViewMode>('list')
+  const [view, setView] = useState<ViewMode>('calendar')
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [studentOptions, setStudentOptions] = useState<string[]>([])
 

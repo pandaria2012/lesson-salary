@@ -29,6 +29,10 @@ async function addRecord(page: Page, opts: { courseLabel: string; student: strin
   await page.getByRole('button', { name: '保存', exact: true }).click()
 }
 
+async function showList(page: Page) {
+  await page.getByRole('button', { name: '列表', exact: true }).click()
+}
+
 test('课程类型：新增/编辑/删除', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: '课程', exact: true }).click()
@@ -54,11 +58,13 @@ test('补录记录 → 月度汇总金额正确 → 导出月报', async ({ page
   await addCourseType(page)
 
   await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: '2026-08-10', start: '13:00', end: '15:00', rate: '200' })
+  await showList(page)
   await expect(page.getByText('2026-08-10')).toBeVisible()
   await expect(page.getByText('¥400.00')).toBeVisible()
 
   // 汇总
   await page.getByRole('button', { name: '汇总', exact: true }).click()
+  await showList(page)
   await expect(page.getByText('总收入', { exact: false })).toBeVisible()
   await expect(page.getByText('¥400.00').first()).toBeVisible()
   await expect(page.getByText('张三', { exact: true })).toBeVisible()
@@ -96,6 +102,7 @@ test('Excel 导入（预览/确认/撤销）', async ({ page }) => {
 
   // 记录页出现导入记录
   await page.getByRole('button', { name: '记录', exact: true }).click()
+  await showList(page)
   await expect(page.locator('.record', { hasText: '李四' })).toBeVisible()
   await expect(page.getByText('¥300.00')).toBeVisible()
 
@@ -105,6 +112,7 @@ test('Excel 导入（预览/确认/撤销）', async ({ page }) => {
   await expect(page.getByText('已撤销导入，删除 1 条记录')).toBeVisible()
 
   await page.getByRole('button', { name: '记录', exact: true }).click()
+  await showList(page)
   await expect(page.getByText('本月暂无记录', { exact: false })).toBeVisible()
 })
 
@@ -141,6 +149,7 @@ test('PIN 锁：开启/锁定/错误提示/解锁/忘记重置', async ({ page }
   await page.getByRole('button', { name: '忘记 PIN' }).click()
   await expect(page.getByText('月度汇总', { exact: false })).toBeVisible()
   await page.getByRole('button', { name: '记录', exact: true }).click()
+  await showList(page)
   await expect(page.getByText('本月暂无记录', { exact: false })).toBeVisible()
 })
 

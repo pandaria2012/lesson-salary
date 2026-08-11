@@ -16,7 +16,7 @@ export default function SummaryPage() {
   const { month, setMonth, prev, next } = useMonth()
   const [records, setRecords] = useState<Awaited<ReturnType<typeof listRecords>>>([])
   const [tab, setTab] = useState<'student' | 'courseType' | 'kind'>('student')
-  const [view, setView] = useState<ViewMode>('list')
+  const [view, setView] = useState<ViewMode>('calendar')
   const [detailDate, setDetailDate] = useState<string | null>(null)
 
   useEffect(() => {
