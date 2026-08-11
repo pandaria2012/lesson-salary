@@ -38,8 +38,8 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
       await nav.share({ files: [file], title: filename })
       return 'shared'
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return 'cancelled'
-      // 分享失败（含文件类型不被支持）→ 继续走保存/下载兜底
+      // 分享被取消/不支持时不要停住，继续走保存/下载兜底，确保文件能拿到
+      void err
     }
   }
 
