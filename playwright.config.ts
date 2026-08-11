@@ -16,9 +16,9 @@ export default defineConfig({
     locale: 'zh-CN'
   },
   webServer: {
-    command: 'npm run preview -- --port 4177 --strictPort',
+    command: 'npm run build && npm run preview -- --port 4177 --strictPort',
     url: 'http://localhost:4177',
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120_000
   }
 })
