@@ -10,7 +10,16 @@ export default function ImportPage() {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [busy, setBusy] = useState(false)
   const [sameFile, setSameFile] = useState(false)
-  const [lastBatch, setLastBatch] = useState<string | null>(null)
+  const [lastBatch, setLastBatchState] = useState<string | null>(() => {
+    try { return sessionStorage.getItem('lastBatchId') } catch { return null }
+  })
+  const setLastBatch = (id: string | null) => {
+    setLastBatchState(id)
+    try {
+      if (id) sessionStorage.setItem('lastBatchId', id)
+      else sessionStorage.removeItem('lastBatchId')
+    } catch { /* ignore */ }
+  }
   const [msg, setMsg] = useState('')
 
   const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err))
