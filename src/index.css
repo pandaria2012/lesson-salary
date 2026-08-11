@@ -90,3 +90,16 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .group-tabs button.active { border-color: var(--primary); color: var(--primary); }
 
 .settings h2 { font-size: 16px; margin: 0 0 8px; }
+
+/* 添加到桌面引导 */
+.guide-mask { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.guide { background: var(--card); width: 100%; max-width: 360px; border-radius: 18px; padding: 24px 20px 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+.guide-icon { font-size: 42px; line-height: 1; }
+.guide h2 { margin: 10px 0 6px; font-size: 20px; }
+.guide .muted { margin: 0 0 8px; }
+.install-steps { text-align: left; margin: 12px 0 4px; padding-left: 22px; }
+.install-steps li { margin-bottom: 10px; }
+.install-steps b { color: var(--primary); }
+.guide-actions { display: flex; gap: 10px; margin-top: 16px; }
+.guide-actions button { flex: 1; }
+.btn-ghost-guide { background: var(--card); color: var(--primary); border: 1px solid var(--primary); }

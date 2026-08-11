@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
 import * as XLSX from 'xlsx'
 
+// 默认跳过“添加到桌面”引导，避免遮挡页面（引导流程有独立用例）
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('ls.installGuideDismissed', '1'))
+})
+
 async function addCourseType(page: Page, name = '数学1对1', hours = '2', rate = '200') {
   await page.getByRole('button', { name: '课程', exact: true }).click()
   await page.getByRole('button', { name: '新增', exact: true }).click()

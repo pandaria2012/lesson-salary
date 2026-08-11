@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import { usePin } from '../hooks/usePin'
+import { useInstallPrompt } from '../hooks/useInstallPrompt'
+import { isStandalone } from '../lib/installGuide'
 import { listCourseTypes, listRecords } from '../db/repo'
 import { createExportAllWorkbook, downloadWorkbook, parseBackupWorkbook } from '../lib/export'
 import { restoreBackup } from '../lib/restoreService'
@@ -8,8 +10,11 @@ import type { CourseType, LessonRecord } from '../types'
 type BackupData = { records: LessonRecord[]; courseTypes: CourseType[] }
 type MsgKind = 'ok' | 'error'
 
-export default function SettingsPage() {
+export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuide: () => void }) {
   const pin = usePin()
+  const { canInstall, promptInstall } = useInstallPrompt()
+  const [installing, setInstalling] = useState(false)
+  const standalone = isStandalone()
   const restoreRef = useRef<HTMLInputElement>(null)
   const [msg, setMsg] = useState('')
   const [msgKind, setMsgKind] = useState<MsgKind>('ok')
@@ -19,6 +24,19 @@ export default function SettingsPage() {
 
   const showOk = (text: string) => { setMsgKind('ok'); setMsg(text) }
   const showError = (text: string) => { setMsgKind('error'); setMsg(text) }
+
+  const installToHome = async () => {
+    setInstalling(true)
+    try {
+      if (canInstall) {
+        const ok = await promptInstall()
+        if (ok) { showOk('已添加，可从桌面启动'); return }
+      }
+    } finally {
+      setInstalling(false)
+    }
+    onOpenInstallGuide()
+  }
 
   const exportAll = async () => {
     try {
@@ -101,6 +119,15 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      {!standalone && (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <h2>添加到桌面</h2>
+          <p className="muted">添加到手机主屏幕，像 App 一样使用，离线也能打开。</p>
+          <button style={{ width: '100%' }} disabled={installing} onClick={() => void installToHome()}>
+            {installing ? '处理中…' : '添加到桌面'}
+          </button>
+        </div>
+      )}
       <div className="card" style={{ marginBottom: 12 }}>
         <h2>PIN 锁</h2>
         <div className="field"><label>原 PIN（修改/关闭时填写）</label><input type="password" inputMode="numeric" value={oldPin} onChange={e => setOldPin(e.target.value.replace(/\D/g, '').slice(0, 6))} /></div>
