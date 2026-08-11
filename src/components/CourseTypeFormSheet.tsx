@@ -40,10 +40,11 @@ export default function CourseTypeFormSheet({ open, initial, onClose, onSaved }:
   return (
     <Sheet open={open} title={initial ? '编辑课程类型' : '新增课程类型'} onClose={onClose}>
       <div className="field"><label>名称 *</label><input value={name} onChange={e => setName(e.target.value)} placeholder="如：初三数学1对1" /></div>
-      <div className="field"><label>教学形式</label>
-        <select value={type} onChange={e => setType(e.target.value)}>
+      <div className="field"><label>教学形式（可自定义）</label>
+        <input list="teaching-forms" value={type} onChange={e => setType(e.target.value)} placeholder="如：一对一 / 小班 / 线上 / 自定义" />
+        <datalist id="teaching-forms">
           <option>一对一</option><option>小班</option><option>线上</option><option>其他</option>
-        </select>
+        </datalist>
       </div>
       <div className="field"><label>状态</label>
         <select value={status} onChange={e => setStatus(e.target.value as CourseTypeStatus)}>

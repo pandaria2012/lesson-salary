@@ -5,7 +5,7 @@ async function addCourseType(page: Page, name = '数学1对1', hours = '2', rate
   await page.getByRole('button', { name: '课程', exact: true }).click()
   await page.getByRole('button', { name: '新增', exact: true }).click()
   await page.locator('.sheet input[placeholder*="初三数学"]').fill(name)
-  await page.locator('.sheet select').nth(0).selectOption({ index: 0 }) // 一对一
+  await page.locator('.sheet input[list="teaching-forms"]').fill('一对一')
   await page.locator('.sheet input[inputmode="decimal"]').nth(0).fill(hours)
   await page.locator('.sheet input[inputmode="decimal"]').nth(1).fill(rate)
   await page.getByRole('button', { name: '保存', exact: true }).click()
