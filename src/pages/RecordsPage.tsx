@@ -8,11 +8,15 @@ import { useCourseTypes } from '../hooks/useCourseTypes'
 import { useMonth } from '../hooks/useMonth'
 import { useRecords } from '../hooks/useRecords'
 import { listStudentNames } from '../db/repo'
-import { buildDayMap } from '../lib/calendar'
+import { buildDayMap, fmtDayLabel } from '../lib/calendar'
+import { fmtMoney } from '../lib/format'
 import type { LessonRecord } from '../types'
 
 type ViewMode = 'list' | 'calendar'
 type StatusFilter = 'all' | 'normal' | 'cancelled'
+type GroupBy = 'day' | 'course' | 'student'
+
+interface RecordGroup { key: string; label: string; rows: LessonRecord[] }
 
 export default function RecordsPage() {
   const { month, setMonth, prev, next } = useMonth()
@@ -26,6 +30,7 @@ export default function RecordsPage() {
   const [filterStudent, setFilterStudent] = useState('')
   const [filterCourse, setFilterCourse] = useState('')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
+  const [groupBy, setGroupBy] = useState<GroupBy>('day')
 
   const refreshStudents = useCallback(async () => {
     setStudentOptions(await listStudentNames())
@@ -57,6 +62,29 @@ export default function RecordsPage() {
     setFilterCourse('')
     setFilterStatus('all')
   }
+
+  const groups = useMemo<RecordGroup[]>(() => {
+    const map = new Map<string, LessonRecord[]>()
+    for (const r of filtered) {
+      const key = groupBy === 'day' ? r.date : groupBy === 'course' ? r.courseTypeName : r.student
+      const arr = map.get(key) ?? []
+      arr.push(r)
+      map.set(key, arr)
+    }
+    const list = [...map.entries()].map(([key, rows]) => ({
+      key,
+      label: groupBy === 'day'
+        ? (key ? fmtDayLabel(key) : '未填日期')
+        : (key || '（未分类）'),
+      rows
+    }))
+    if (groupBy === 'day') list.sort((a, b) => (a.key < b.key ? 1 : -1))
+    else list.sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'))
+    return list
+  }, [filtered, groupBy])
+
+  const groupAmount = (rows: LessonRecord[]) =>
+    rows.reduce((s, r) => s + (r.status === 'normal' && r.rate !== null && r.hours !== null ? r.rate * r.hours : 0), 0)
 
   const dayMap = useMemo(() => buildDayMap(filtered), [filtered])
   const dayRecords = useMemo(
@@ -91,14 +119,27 @@ export default function RecordsPage() {
       {hasFilter && <p className="muted" style={{ marginTop: -6, marginBottom: 10 }}>筛选结果：{filtered.length} 条</p>}
       {view === 'list' ? (
         <>
-          {filtered.map(r => (
-            <RecordCard
-              key={r.id}
-              record={r}
-              onEdit={() => { setEditing(r); setOpen(true) }}
-              onToggleCancel={() => void save({ ...r, status: r.status === 'normal' ? 'cancelled' : 'normal' })}
-              onDelete={() => { if (confirm('删除这条记录？')) void remove(r.id) }}
-            />
+          <div className="group-tabs2">
+            <button className={groupBy === 'day' ? 'active' : ''} onClick={() => setGroupBy('day')}>按天</button>
+            <button className={groupBy === 'course' ? 'active' : ''} onClick={() => setGroupBy('course')}>按课程</button>
+            <button className={groupBy === 'student' ? 'active' : ''} onClick={() => setGroupBy('student')}>按学生</button>
+          </div>
+          {groups.map(g => (
+            <div key={g.key} className="record-group">
+              <div className="group-head">
+                <strong>{g.label}</strong>
+                <span className="muted">{g.rows.length} 条 · ¥{fmtMoney(groupAmount(g.rows))}</span>
+              </div>
+              {g.rows.map(r => (
+                <RecordCard
+                  key={r.id}
+                  record={r}
+                  onEdit={() => { setEditing(r); setOpen(true) }}
+                  onToggleCancel={() => void save({ ...r, status: r.status === 'normal' ? 'cancelled' : 'normal' })}
+                  onDelete={() => { if (confirm('删除这条记录？')) void remove(r.id) }}
+                />
+              ))}
+            </div>
           ))}
           {filtered.length === 0 && (
             <p className="empty">{items.length === 0 ? '本月暂无记录，可导入课程表或手动补录。' : '没有符合筛选条件的记录。'}</p>

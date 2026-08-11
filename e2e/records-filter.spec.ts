@@ -58,3 +58,24 @@ test('记录页筛选：按学生/状态过滤与清除', async ({ page }) => {
   await expect(page.locator('.record', { hasText: '张三' })).toBeVisible()
   await expect(page.locator('.record', { hasText: '李四' })).toBeHidden()
 })
+
+test('记录列表按天/课程/学生分组', async ({ page }) => {
+  await page.goto('/')
+  await addCourseType(page)
+  await addRecord(page, '张三', '2026-08-10', '13:00', '15:00')
+  await addRecord(page, '李四', '2026-08-12', '10:00', '11:00')
+
+  // 默认按天分组
+  await expect(page.locator('.group-head', { hasText: '8月10日' })).toBeVisible()
+  await expect(page.locator('.group-head', { hasText: '8月12日' })).toBeVisible()
+
+  // 按课程分组
+  await page.getByRole('button', { name: '按课程', exact: true }).click()
+  await expect(page.locator('.group-head', { hasText: '数学1对1' })).toBeVisible()
+  await expect(page.locator('.group-head', { hasText: '2 条' })).toBeVisible()
+
+  // 按学生分组
+  await page.getByRole('button', { name: '按学生', exact: true }).click()
+  await expect(page.locator('.group-head', { hasText: '张三' })).toBeVisible()
+  await expect(page.locator('.group-head', { hasText: '李四' })).toBeVisible()
+})

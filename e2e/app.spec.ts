@@ -66,7 +66,7 @@ test('补录记录 → 月度汇总金额正确 → 导出月报', async ({ page
   await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: '2026-08-10', start: '13:00', end: '15:00', rate: '200' })
   await showList(page)
   await expect(page.getByText('2026-08-10')).toBeVisible()
-  await expect(page.getByText('¥400.00')).toBeVisible()
+  await expect(page.getByText('¥400.00', { exact: true })).toBeVisible()
 
   // 汇总
   await page.getByRole('button', { name: '汇总', exact: true }).click()
@@ -110,7 +110,7 @@ test('Excel 导入（预览/确认/撤销）', async ({ page }) => {
   await page.getByRole('button', { name: '记录', exact: true }).click()
   await showList(page)
   await expect(page.locator('.record', { hasText: '李四' })).toBeVisible()
-  await expect(page.getByText('¥300.00')).toBeVisible()
+  await expect(page.getByText('¥300.00', { exact: true })).toBeVisible()
 
   // 撤销整批
   await page.getByRole('button', { name: '导入', exact: true }).click()
