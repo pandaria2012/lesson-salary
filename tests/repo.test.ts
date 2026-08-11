@@ -4,7 +4,7 @@ import { db } from '../src/db/db'
 import {
   addBatch, deleteBatch, deleteCourseType, deleteRecord,
   getBatchByHash, getSetting, listCourseTypes, listRecords,
-  saveCourseType, saveRecord, setSetting
+  listStudentNames, saveCourseType, saveRecord, setSetting
 } from '../src/db/repo'
 import type { CourseType, ImportBatch, LessonRecord } from '../src/types'
 
@@ -63,4 +63,12 @@ describe('repo', () => {
     expect(await getSetting<string>('pin_hash')).toBe('abc123')
     expect(await getSetting<string>('missing')).toBeUndefined()
   })
-})
+
+  it('学生历史名称去重排序', async () => {
+    await saveRecord(rec({ id: 'a', student: '张三' }))
+    await saveRecord(rec({ id: 'b', student: '李四' }))
+    await saveRecord(rec({ id: 'c', student: '张三' }))
+    await saveRecord(rec({ id: 'd', student: '   ' }))
+    const names = await listStudentNames()
+    expect(names).toEqual(['李四', '张三'])
+  })})

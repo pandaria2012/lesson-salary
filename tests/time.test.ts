@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeHours, parseExcelDate, parseTimeRange } from '../src/lib/time'
+import { addMinutes, computeHours, nextHalfHour, parseExcelDate, parseTimeRange } from '../src/lib/time'
 
 describe('parseExcelDate', () => {
   const now = new Date('2026-08-10T12:00:00+08:00')
@@ -70,5 +70,31 @@ describe('computeHours', () => {
     expect(computeHours('99:99', '99:99')).toBeNull()
     expect(computeHours('24:00', '01:00')).toBeNull()
     expect(computeHours('13:60', '15:00')).toBeNull()
+  })
+})
+
+describe('addMinutes', () => {
+  it('常规加法', () => {
+    expect(addMinutes('13:00', 120)).toBe('15:00')
+    expect(addMinutes('13:30', 30)).toBe('14:00')
+  })
+  it('跨天回绕 23:00 + 2h → 01:00', () => {
+    expect(addMinutes('23:00', 120)).toBe('01:00')
+  })
+  it('非法输入 → null', () => {
+    expect(addMinutes('', 60)).toBeNull()
+    expect(addMinutes('25:00', 60)).toBeNull()
+  })
+})
+
+describe('nextHalfHour', () => {
+  it('整点向后取半点', () => {
+    expect(nextHalfHour(new Date(2026, 7, 10, 13, 0))).toBe('13:30')
+  })
+  it('半点保持不变', () => {
+    expect(nextHalfHour(new Date(2026, 7, 10, 13, 30))).toBe('13:30')
+  })
+  it('23:40 → 00:00（跨日回绕）', () => {
+    expect(nextHalfHour(new Date(2026, 7, 10, 23, 40))).toBe('00:00')
   })
 })

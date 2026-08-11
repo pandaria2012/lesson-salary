@@ -118,3 +118,55 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .guide-actions { display: flex; gap: 10px; margin-top: 16px; }
 .guide-actions button { flex: 1; }
 .btn-ghost-guide { background: var(--card); color: var(--primary); border: 1px solid var(--primary); }
+
+/* 列表/日历切换 */
+.view-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
+.view-tabs button { flex: 1; background: var(--card); color: var(--text); border: 1px solid var(--border); min-height: 40px; }
+.view-tabs button.active { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+/* 月历 */
+.calendar { padding: 10px; }
+.cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-week span { text-align: center; color: var(--muted); font-size: 12px; padding: 4px 0; }
+.cal-cell {
+  position: relative;
+  min-height: 52px;
+  min-width: 0;
+  background: none;
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+}
+.cal-cell.empty { visibility: hidden; }
+.cal-cell.selected { background: rgba(31, 111, 235, .12); }
+.cal-day { font-size: 13px; line-height: 1.4; }
+.cal-cell.today .cal-day {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-info { display: flex; flex-direction: column; align-items: center; line-height: 1.15; margin-top: 2px; max-width: 100%; }
+.cal-amount { font-size: 9px; font-weight: 600; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.cal-count { font-size: 9px; color: var(--muted); white-space: nowrap; }
+.cal-count.cancelled { color: var(--danger); }
+
+/* 补录：常用时长快捷按钮 */
+.duration-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 12px; }
+.duration-chips button {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+}
+.duration-chips button:active { border-color: var(--primary); color: var(--primary); }

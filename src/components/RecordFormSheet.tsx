@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import Sheet from './Sheet'
-import { computeHours } from '../lib/time'
+import { addMinutes, computeHours, nextHalfHour } from '../lib/time'
 import type { CourseType, LessonRecord } from '../types'
 
-export default function RecordFormSheet({ open, initial, courseTypes, onClose, onSaved }: {
+const QUICK_HOURS = [0.5, 1, 1.5, 2, 3]
+
+export default function RecordFormSheet({ open, initial, courseTypes, studentOptions, onClose, onSaved }: {
   open: boolean
   initial: LessonRecord | null
   courseTypes: CourseType[]
+  studentOptions: string[]
   onClose: () => void
   onSaved: (r: LessonRecord) => void
 }) {
@@ -22,12 +25,13 @@ export default function RecordFormSheet({ open, initial, courseTypes, onClose, o
 
   useEffect(() => {
     if (open) {
-      setCourseTypeId(initial?.courseTypeId ?? courseTypes[0]?.id ?? '')
+      const first = courseTypes[0] ?? null
+      setCourseTypeId(initial?.courseTypeId ?? first?.id ?? '')
       setStudent(initial?.student ?? '')
       setDate(initial?.date ?? '')
       setStart(initial?.startTime ?? '')
       setEnd(initial?.endTime ?? '')
-      setRate(initial?.rate === null ? '' : String(initial?.rate ?? ''))
+      setRate(initial ? (initial.rate === null ? '' : String(initial.rate)) : (first?.defaultRate != null ? String(first.defaultRate) : ''))
       setStatus(initial?.status ?? 'normal')
       setNote(initial?.note ?? '')
       setError('')
@@ -40,6 +44,26 @@ export default function RecordFormSheet({ open, initial, courseTypes, onClose, o
     () => computeHours(start || null, end || null) ?? (start && !end ? ct?.defaultHours ?? null : null) ?? (initial?.hours ?? null),
     [start, end, ct, initial?.hours]
   )
+
+  /** 课程类型联动：自动带出默认时薪（仅在用户没改过时薪时覆盖） */
+  const onCourseTypeChange = (id: string) => {
+    const next = courseTypes.find(c => c.id === id) ?? null
+    setCourseTypeId(id)
+    if (next?.defaultRate != null) {
+      const prevDefault = ct?.defaultRate
+      if (rate === '' || (prevDefault != null && rate === String(prevDefault))) {
+        setRate(String(next.defaultRate))
+      }
+    }
+  }
+
+  /** 时长快捷：有开始时间则自动算结束；没有则先用最近半点当开始时间 */
+  const applyDuration = (hours: number) => {
+    const base = start || nextHalfHour()
+    if (!start) setStart(base)
+    const endTime = addMinutes(base, hours * 60)
+    if (endTime) setEnd(endTime)
+  }
 
   const submit = () => {
     if (!student.trim()) { setError('请填写学生名称'); return }
@@ -71,17 +95,26 @@ export default function RecordFormSheet({ open, initial, courseTypes, onClose, o
   return (
     <Sheet open={open} title={initial ? '编辑上课记录' : '补录上课记录'} onClose={onClose}>
       <div className="field"><label>课程类型 *</label>
-        <select value={courseTypeId} onChange={e => setCourseTypeId(e.target.value)}>
+        <select value={courseTypeId} onChange={e => onCourseTypeChange(e.target.value)}>
           {courseTypes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        {ct && <p className="muted">默认 {ct.defaultHours ?? '—'} 小时 · {ct.defaultRate ?? '—'} 元/小时</p>}
       </div>
-      <div className="field"><label>学生名称 *</label><input value={student} onChange={e => setStudent(e.target.value)} placeholder="如：张三" /></div>
+      <div className="field"><label>学生名称 *</label>
+        <input value={student} onChange={e => setStudent(e.target.value)} list="student-options" placeholder="如：张三" autoComplete="off" />
+        <datalist id="student-options">
+          {studentOptions.map(s => <option key={s} value={s} />)}
+        </datalist>
+      </div>
       <div className="field"><label>日期 *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
-      <div className="row2">
-        <div className="field"><label>开始时间</label><input type="time" value={start} onChange={e => setStart(e.target.value)} /></div>
-        <div className="field"><label>结束时间</label><input type="time" value={end} onChange={e => setEnd(e.target.value)} /></div>
+      <div className="field"><label>开始时间</label><input type="time" value={start} onChange={e => setStart(e.target.value)} /></div>
+      <div className="duration-chips">
+        {QUICK_HOURS.map(h => (
+          <button key={h} type="button" onClick={() => applyDuration(h)}>{h}小时</button>
+        ))}
       </div>
-      <p className="muted">课时：{computedHours === null ? '待定' : `${computedHours} 小时`}（结束早于开始按跨天计算；只填开始时间用默认课时）</p>
+      <div className="field"><label>结束时间</label><input type="time" value={end} onChange={e => setEnd(e.target.value)} /></div>
+      <p className="muted">课时：{computedHours === null ? '待定' : `${computedHours} 小时`}（先选开始时间，再用时长快捷按钮自动算结束；结束早于开始按跨天计算）</p>
       <div className="field"><label>时薪（元/小时）*</label><input inputMode="decimal" value={rate} onChange={e => setRate(e.target.value)} placeholder={ct?.defaultRate ? `默认 ${ct.defaultRate}` : '如 200'} /></div>
       <div className="field"><label>状态</label>
         <select value={status} onChange={e => setStatus(e.target.value as 'normal' | 'cancelled')}>

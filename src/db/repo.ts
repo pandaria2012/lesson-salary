@@ -50,3 +50,12 @@ export async function getSetting<T>(key: string): Promise<T | undefined> {
 export async function setSetting(key: string, value: unknown): Promise<void> {
   await db.settings.put({ key, value })
 }
+
+export async function listStudentNames(): Promise<string[]> {
+  const keys = await db.records.orderBy('student').uniqueKeys()
+  const names = new Set<string>()
+  for (const k of keys) {
+    if (typeof k === 'string' && k.trim()) names.add(k.trim())
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, 'zh-CN'))
+}

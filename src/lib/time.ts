@@ -81,3 +81,19 @@ export function computeHours(startTime: string | null, endTime: string | null): 
   const h = (e - s) / 60
   return Math.round(h * 100) / 100
 }
+
+export function addMinutes(time: string, minutes: number): string | null {
+  const m = time.match(/^(\d{2}):(\d{2})$/)
+  if (!m) return null
+  const h = Number(m[1]), min = Number(m[2])
+  if (h > 23 || min > 59) return null
+  const total = (h * 60 + min + Math.round(minutes)) % (24 * 60)
+  return `${pad2(Math.floor(total / 60))}:${pad2(total % 60)}`
+}
+
+/** 当前时间向后取最近的半点（用于时长快捷按钮的默认开始时间）：整点顺延半点，半点保持，其余向上取半点 */
+export function nextHalfHour(now = new Date()): string {
+  const total = now.getHours() * 60 + now.getMinutes()
+  const rounded = (total % 60 === 0 ? total + 30 : Math.ceil(total / 30) * 30) % (24 * 60)
+  return `${pad2(Math.floor(rounded / 60))}:${pad2(rounded % 60)}`
+}
