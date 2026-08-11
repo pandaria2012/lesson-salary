@@ -15,11 +15,19 @@ const rec: LessonRecord = {
 }
 
 describe('createImportTemplateWorkbook', () => {
-  it('表头 + 2 行示例', () => {
+  it('表头 + 4 行示例（覆盖多种兼容格式）', () => {
     const rows = sheetRows(createImportTemplateWorkbook(), '上课记录')
     expect(rows[0]).toEqual(['课程类型', '课程单价', '学生名称', '上课日期', '上课时间'])
-    expect(rows.length).toBe(3)
-    expect(String(rows[1][2])).toContain('示例')
+    expect(rows.length).toBe(5)
+    for (let i = 1; i < rows.length; i++) expect(String(rows[i][2])).toContain('示例')
+    expect(rows[1][1]).toBe(200)
+    expect(rows[2][1]).toBe('150元/小时')
+    expect(rows[3][1]).toBe('¥300')
+    expect(rows[4][1]).toBe('')
+    expect(rows[2][3]).toBe('2026/8/12')
+    expect(rows[3][3]).toBe('08-14')
+    expect(rows[2][4]).toBe('13-15')
+    expect(rows[3][4]).toBe('18:30~20:30')
   })
 })
 
