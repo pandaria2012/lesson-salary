@@ -3,9 +3,11 @@ import { fmtHours } from '../lib/format'
 
 export default function ImportPreview({ rows, onToggle }: { rows: ParsedRow[]; onToggle: (i: number) => void }) {
   const selectedCount = rows.filter(r => r.selected).length
+  const dupCount = rows.filter(r => r.isDuplicate).length
   return (
     <div>
       <p className="muted">共 {rows.length} 行，将导入 {selectedCount} 行；异常/重复/示例行默认不勾选。</p>
+      {dupCount > 0 && <p className="warn">⚠️ 其中 {dupCount} 行为重复记录（默认不勾选），如需再次入库请手动勾选。</p>}
       {rows.map((r, i) => (
         <label className="card preview-row" key={i}>
           <input type="checkbox" checked={r.selected} onChange={() => onToggle(i)} />

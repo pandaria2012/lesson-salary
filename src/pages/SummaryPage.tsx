@@ -36,6 +36,7 @@ export default function SummaryPage() {
   )
 
   const exportMonth = async () => {
+    setMsg('正在生成 Excel…')
     try {
       const res = await saveWorkbook(createMonthlyWorkbook(records, groups), `课时薪资-${month}.xlsx`)
       if (res === 'cancelled') setMsg('已取消导出')

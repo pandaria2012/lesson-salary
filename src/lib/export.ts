@@ -27,17 +27,19 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
   const blob = new Blob([data], { type })
   const file = new File([blob], filename, { type })
 
-  // 1) 系统分享（仅手机端：iOS Safari / 安卓 Chrome 等；桌面浏览器走保存对话框/下载）
   const ua = navigator.userAgent.toLowerCase()
-  const isMobile = /iphone|ipod|ipad|android/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const nav = navigator as Navigator & { canShare?: (data?: { files?: File[] }) => boolean }
-  if (isMobile && nav.canShare && nav.canShare({ files: [file] })) {
+  const isIOS = /iphone|ipod|ipad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isMobile = isIOS || /android/.test(ua)
+
+  // 1) 手机端：只要有 navigator.share 就尝试系统分享（不依赖 canShare，避免部分浏览器误判不支持 xlsx）
+  const nav = navigator as Navigator & { share?: (d: { files?: File[]; title?: string }) => Promise<void> }
+  if (isMobile && typeof nav.share === 'function') {
     try {
       await nav.share({ files: [file], title: filename })
       return 'shared'
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return 'cancelled'
-      // 分享失败 → 继续走下面的保存/下载
+      // 分享失败（含文件类型不被支持）→ 继续走保存/下载兜底
     }
   }
 
@@ -66,7 +68,7 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
     }
   }
 
-  // 3) 兜底：浏览器下载
+  // 3) 兜底：浏览器下载（iOS 上 <a download> 无效，改用新标签页打开文件供存储/分享）
   try {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -76,13 +78,15 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
     document.body.appendChild(a)
     a.click()
     a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 2000)
+    if (isIOS) {
+      window.open(url, '_blank')
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
     return 'downloaded'
   } catch {
     return 'failed'
   }
 }
-
 export function createExportAllWorkbook(records: LessonRecord[], courseTypes: CourseType[]): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()
   const recRows = [

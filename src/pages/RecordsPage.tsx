@@ -7,7 +7,7 @@ import RecordFormSheet from '../components/RecordFormSheet'
 import { useCourseTypes } from '../hooks/useCourseTypes'
 import { useMonth } from '../hooks/useMonth'
 import { useRecords } from '../hooks/useRecords'
-import { listStudentNames } from '../db/repo'
+import { listRecords, listStudentNames } from '../db/repo'
 import { buildDayMap, fmtDayLabel } from '../lib/calendar'
 import { fmtMoney } from '../lib/format'
 import type { LessonRecord } from '../types'
@@ -27,6 +27,7 @@ export default function RecordsPage() {
   const [view, setView] = useState<ViewMode>('list')
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [studentOptions, setStudentOptions] = useState<string[]>([])
+  const [allRecords, setAllRecords] = useState<LessonRecord[]>([])
   const [filterStudent, setFilterStudent] = useState('')
   const [filterCourse, setFilterCourse] = useState('')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
@@ -36,7 +37,14 @@ export default function RecordsPage() {
     setStudentOptions(await listStudentNames())
   }, [])
 
-  useEffect(() => { void refreshStudents() }, [refreshStudents])
+  const refreshAllRecords = useCallback(async () => {
+    setAllRecords(await listRecords())
+  }, [])
+
+  useEffect(() => {
+    void refreshStudents()
+    void refreshAllRecords()
+  }, [refreshStudents, refreshAllRecords])
 
   const studentFilterOptions = useMemo(
     () => [...new Set(items.map(r => r.student).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN')),
@@ -96,9 +104,16 @@ export default function RecordsPage() {
     <section className="page">
       <header className="page-head"><h1>上课记录</h1></header>
       <MonthPicker month={month} onPrev={prev} onNext={next} onChange={setMonth} />
-      <div className="view-tabs">
+      <div className="toolbar">
         <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>列表</button>
         <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>日历</button>
+        {view === 'list' && (
+          <>
+            <button className={groupBy === 'day' ? 'active' : ''} onClick={() => setGroupBy('day')}>按天</button>
+            <button className={groupBy === 'course' ? 'active' : ''} onClick={() => setGroupBy('course')}>按课程</button>
+            <button className={groupBy === 'student' ? 'active' : ''} onClick={() => setGroupBy('student')}>按学生</button>
+          </>
+        )}
       </div>
       <div className="filters">
         <select value={filterStudent} onChange={e => setFilterStudent(e.target.value)}>
@@ -114,16 +129,11 @@ export default function RecordsPage() {
           <option value="normal">正常</option>
           <option value="cancelled">已取消</option>
         </select>
-        {hasFilter && <button className="btn-clear" onClick={clearFilters}>清除筛选</button>}
+        {hasFilter && <button className="btn-clear" onClick={clearFilters}>清除</button>}
       </div>
-      {hasFilter && <p className="muted" style={{ marginTop: -6, marginBottom: 10 }}>筛选结果：{filtered.length} 条</p>}
+      {hasFilter && <p className="muted" style={{ marginTop: -4, marginBottom: 8, fontSize: 13 }}>筛选结果：{filtered.length} 条</p>}
       {view === 'list' ? (
         <>
-          <div className="group-tabs2">
-            <button className={groupBy === 'day' ? 'active' : ''} onClick={() => setGroupBy('day')}>按天</button>
-            <button className={groupBy === 'course' ? 'active' : ''} onClick={() => setGroupBy('course')}>按课程</button>
-            <button className={groupBy === 'student' ? 'active' : ''} onClick={() => setGroupBy('student')}>按学生</button>
-          </div>
           {groups.map(g => (
             <div key={g.key} className="record-group">
               <div className="group-head">
@@ -154,8 +164,9 @@ export default function RecordsPage() {
         initial={editing}
         courseTypes={courseTypes}
         studentOptions={studentOptions}
+        records={allRecords}
         onClose={() => setOpen(false)}
-        onSaved={async r => { await save(r); setOpen(false); void refreshStudents() }}
+        onSaved={async r => { await save(r); setOpen(false); void refreshStudents(); void refreshAllRecords() }}
       />
       <DayDetailSheet open={detailDate !== null} date={detailDate} records={dayRecords} onClose={() => setDetailDate(null)} />
     </section>

@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import Sheet from './Sheet'
 import { addMinutes, computeHours, nextHalfHour } from '../lib/time'
+import { findDuplicateRecord } from '../lib/dedup'
 import type { CourseType, LessonRecord } from '../types'
 
 const QUICK_HOURS = [0.5, 1, 1.5, 2, 3]
 
-export default function RecordFormSheet({ open, initial, courseTypes, studentOptions, onClose, onSaved }: {
+export default function RecordFormSheet({ open, initial, courseTypes, studentOptions, records, onClose, onSaved }: {
   open: boolean
   initial: LessonRecord | null
   courseTypes: CourseType[]
   studentOptions: string[]
+  records: LessonRecord[]
   onClose: () => void
   onSaved: (r: LessonRecord) => void
 }) {
@@ -22,6 +24,7 @@ export default function RecordFormSheet({ open, initial, courseTypes, studentOpt
   const [status, setStatus] = useState<'normal' | 'cancelled'>('normal')
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
+  const [dupWarning, setDupWarning] = useState<LessonRecord | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -35,6 +38,7 @@ export default function RecordFormSheet({ open, initial, courseTypes, studentOpt
       setStatus(initial?.status ?? 'normal')
       setNote(initial?.note ?? '')
       setError('')
+      setDupWarning(null)
     }
   }, [open, initial, courseTypes])
 
@@ -65,15 +69,15 @@ export default function RecordFormSheet({ open, initial, courseTypes, studentOpt
     if (endTime) setEnd(endTime)
   }
 
-  const submit = () => {
-    if (!student.trim()) { setError('请填写学生名称'); return }
-    if (!date) { setError('请选择日期'); return }
-    if (!ct) { setError('请选择课程类型'); return }
+  const buildRecord = (): LessonRecord | null => {
+    if (!student.trim()) { setError('请填写学生名称'); return null }
+    if (!date) { setError('请选择日期'); return null }
+    if (!ct) { setError('请选择课程类型'); return null }
     const hours = computedHours
-    if (hours === null) { setError('无法确定课时：请填写时间段或设置课程默认课时'); return }
+    if (hours === null) { setError('无法确定课时：请填写时间段或设置课程默认课时'); return null }
     const r = Number(rate)
-    if (rate === '' || Number.isNaN(r) || r < 0) { setError('请填写有效时薪'); return }
-    onSaved({
+    if (rate === '' || Number.isNaN(r) || r < 0) { setError('请填写有效时薪'); return null }
+    return {
       id: initial?.id ?? `r-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       courseTypeId: ct.id,
       courseTypeName: ct.name,
@@ -89,7 +93,26 @@ export default function RecordFormSheet({ open, initial, courseTypes, studentOpt
       batchId: initial?.batchId ?? null,
       note: note.trim(),
       createdAt: initial?.createdAt ?? new Date().toISOString()
-    })
+    }
+  }
+
+  const submit = () => {
+    const rec = buildRecord()
+    if (!rec) return
+    const dup = findDuplicateRecord(rec, records, initial?.id)
+    if (dup) {
+      setError('')
+      setDupWarning(dup)
+      return
+    }
+    onSaved(rec)
+  }
+
+  const saveAnyway = () => {
+    const rec = buildRecord()
+    if (!rec) return
+    setDupWarning(null)
+    onSaved(rec)
   }
 
   return (
@@ -123,6 +146,16 @@ export default function RecordFormSheet({ open, initial, courseTypes, studentOpt
       </div>
       <div className="field"><label>备注</label><input value={note} onChange={e => setNote(e.target.value)} placeholder="选填" /></div>
       {error && <p className="error">{error}</p>}
+      {dupWarning && (
+        <div className="dup-warn">
+          <p className="warn">⚠️ 已存在相同记录：{dupWarning.date} {dupWarning.student} · {dupWarning.courseTypeName}
+            {dupWarning.startTime && dupWarning.endTime ? ` ${dupWarning.startTime}-${dupWarning.endTime}` : '（时间待定）'}。确认仍要保存吗？</p>
+          <div className="row-actions">
+            <button onClick={saveAnyway}>仍要保存</button>
+            <button className="btn-ghost-guide" onClick={() => setDupWarning(null)}>返回修改</button>
+          </div>
+        </div>
+      )}
       <button style={{ width: '100%' }} onClick={submit}>保存</button>
     </Sheet>
   )

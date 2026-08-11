@@ -39,6 +39,7 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
   }
 
   const exportAll = async () => {
+    showOk('正在生成 Excel…')
     try {
       const [records, courseTypes] = await Promise.all([listRecords(), listCourseTypes()])
       const res = await saveWorkbook(createExportAllWorkbook(records, courseTypes), `课时薪资-全部数据-${new Date().toISOString().slice(0, 10)}.xlsx`)

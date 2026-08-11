@@ -48,7 +48,7 @@ test('记录页筛选：按学生/状态过滤与清除', async ({ page }) => {
   await expect(page.getByText('没有符合筛选条件的记录。')).toBeVisible()
 
   // 清除筛选 → 两条都在
-  await page.getByRole('button', { name: '清除筛选' }).click()
+  await page.getByRole('button', { name: '清除', exact: true }).click()
   await expect(page.locator('.record', { hasText: '张三' })).toBeVisible()
   await expect(page.locator('.record', { hasText: '李四' })).toBeVisible()
 

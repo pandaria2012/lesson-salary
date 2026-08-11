@@ -64,3 +64,31 @@ test('记录卡片：编辑按钮可修改记录', async ({ page }) => {
   await page.getByRole('button', { name: '保存', exact: true }).click()
   await expect(page.locator('.record', { hasText: '张小三' })).toBeVisible()
 })
+
+test('补录防重复：相同课程/学生/日期/时间段提示确认', async ({ page }) => {
+  await page.goto('/')
+  await addCourseType(page)
+  await addRecord(page) // 张三 2026-08-10 13:00-15:00
+
+  // 再次补录相同记录 → 出现重复确认
+  await page.getByRole('button', { name: /补录/ }).click()
+  await expect(page.locator('.sheet input[placeholder*="张三"]')).toHaveValue('') // 等待表单重置完成
+  await page.locator('.sheet select').nth(0).selectOption({ label: '数学1对1' })
+  await page.locator('.sheet input[placeholder*="张三"]').fill('张三')
+  await page.locator('.sheet input[type="date"]').fill('2026-08-10')
+  await page.locator('.sheet input[type="time"]').nth(0).fill('13:00')
+  await page.locator('.sheet input[type="time"]').nth(1).fill('15:00')
+  await page.locator('.sheet input[inputmode="decimal"]').fill('200')
+  await page.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(page.getByText('已存在相同记录', { exact: false })).toBeVisible()
+
+  // 返回修改 → 提示消失
+  await page.getByRole('button', { name: '返回修改', exact: true }).click()
+  await expect(page.getByText('已存在相同记录', { exact: false })).toBeHidden()
+
+  // 再保存 → 仍要保存 → 入库
+  await page.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(page.getByText('已存在相同记录', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: '仍要保存', exact: true }).click()
+  await expect(page.locator('.record', { hasText: '张三' })).toHaveCount(2)
+})

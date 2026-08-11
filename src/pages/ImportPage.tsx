@@ -62,7 +62,7 @@ export default function ImportPage() {
   }
 
   const downloadTemplate = async () => {
-    setMsg('')
+    setMsg('正在生成…')
     const res = await saveWorkbook(createImportTemplateWorkbook(), '课时薪资-导入模板.xlsx')
     if (res === 'cancelled') setMsg('已取消下载')
     else if (res === 'shared') setMsg('已通过系统分享/存储')
