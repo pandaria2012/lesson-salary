@@ -1,6 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-"""生成「课时薪资」PWA 图标（192/512 PNG，扁平化时钟硬币 + ¥）。"""
-import math
+"""生成「课时薪资」PWA 图标（192/512 PNG，扁平风：书本 + 金币）。"""
 import os
 from PIL import Image, ImageDraw, ImageFont
 
@@ -18,6 +17,9 @@ def pick_font(size):
             return ImageFont.truetype(c, size)
     return ImageFont.load_default()
 
+def rounded_rect(d, box, radius, fill=None, outline=None, width=1):
+    d.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=width)
+
 def draw_icon():
     img = Image.new('RGB', (S, S))
     d = ImageDraw.Draw(img)
@@ -28,20 +30,29 @@ def draw_icon():
         t = y / (S - 1)
         c = tuple(round(top[i] + (bottom[i] - top[i]) * t) for i in range(3))
         d.line([(0, y), (S, y)], fill=c)
-    cx = cy = S // 2
-    R = 330            # 表盘半径
-    ring_w = 36        # 表盘描边宽度
-    # 白色表盘圆环
-    d.ellipse([cx - R, cy - R, cx + R, cy + R], outline='white', width=ring_w)
-    # 12/3/6/9 点钟刻度点
-    dot = 26
-    for ang in (0, 90, 180, 270):
-        x = cx + R * math.cos(math.radians(ang))
-        y = cy + R * math.sin(math.radians(ang))
-        d.ellipse([x - dot, y - dot, x + dot, y + dot], fill='white')
-    # 中心 ¥ 符号
-    font = pick_font(430)
-    d.text((cx, cy + 14), '¥', font=font, fill='white', anchor='mm')
+
+    # ---- 书本（白色圆角矩形 + 书脊 + 书页线）----
+    book = (352, 380, 672, 830)          # 外轮廓
+    rounded_rect(d, book, radius=36, fill='white')
+    # 左书脊（浅蓝条）
+    rounded_rect(d, (352, 380, 392, 830), radius=20, fill='#d7e6ff')
+    # 书页线（浅蓝灰）
+    line_color = '#cfe0ff'
+    for ly in (480, 545, 610, 675):
+        d.line([(420, ly), (645, ly)], fill=line_color, width=10)
+
+    # ---- 小金币（左上，叠在大金币后面）----
+    small_c = (525, 360)
+    d.ellipse([small_c[0]-72, small_c[1]-72, small_c[0]+72, small_c[1]+72],
+              fill='#ffd97a', outline='#e6b84c', width=10)
+
+    # ---- 大金币（含 ¥）----
+    big_c = (650, 445)
+    d.ellipse([big_c[0]-150, big_c[1]-150, big_c[0]+150, big_c[1]+150],
+              fill='#ffc93c', outline='#e6a817', width=14)
+    font = pick_font(180)
+    d.text((big_c[0], big_c[1] + 8), '¥', font=font, fill='#1450c4', anchor='mm')
+
     return img
 
 def main():
