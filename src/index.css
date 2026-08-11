@@ -171,3 +171,11 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
   border-radius: 999px;
 }
 .duration-chips button:active { border-color: var(--primary); color: var(--primary); }
+/* 记录卡片操作按钮：紧凑 */
+.record .row-actions { gap: 6px; margin-top: 8px; }
+.record .row-actions button { flex: 1; min-height: 32px; padding: 0 8px; font-size: 13px; border-radius: 8px; }
+
+/* 记录页筛选 */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.filters select { flex: 1 1 calc(50% - 8px); min-width: 0; min-height: 40px; padding: 8px 10px; font-size: 14px; }
+.filters .btn-clear { flex: 1 1 100%; min-height: 40px; background: var(--card); color: var(--primary); border: 1px solid var(--primary); }
