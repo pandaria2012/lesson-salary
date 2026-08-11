@@ -64,7 +64,22 @@ input, select, textarea { font: inherit; font-size: 16px; padding: 10px 12px; bo
 .rec-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
 .rec-cancel { color: var(--danger); font-size: 13px; margin-top: 4px; }
 
-.fab { position: fixed; right: 20px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 16px); width: 56px; height: 56px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 96px;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 16px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
 
 .preview-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
 .preview-row input[type=checkbox] { width: 22px; height: 22px; margin-top: 4px; }
