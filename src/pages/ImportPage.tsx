@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import ImportPreview from '../components/ImportPreview'
 import { deleteBatch, getBatchByHash, listCourseTypes, listRecords } from '../db/repo'
 import { applyImport } from '../lib/importService'
-import { createImportTemplateWorkbook, downloadWorkbook } from '../lib/export'
+import { createImportTemplateWorkbook, saveWorkbook } from '../lib/export'
 import { parseWorkbook, type ImportPreview as Preview } from '../lib/parser'
 
 export default function ImportPage() {
@@ -61,6 +61,16 @@ export default function ImportPage() {
     if (inputRef.current) inputRef.current.value = ''
   }
 
+  const downloadTemplate = async () => {
+    setMsg('')
+    const res = await saveWorkbook(createImportTemplateWorkbook(), '课时薪资-导入模板.xlsx')
+    if (res === 'cancelled') setMsg('已取消下载')
+    else if (res === 'shared') setMsg('已通过系统分享/存储')
+    else if (res === 'saved') setMsg('已保存')
+    else if (res === 'failed') setMsg('下载失败')
+    else setMsg('已开始下载')
+  }
+
   const undo = async () => {
     if (!lastBatch || busy) return
     try {
@@ -75,7 +85,7 @@ export default function ImportPage() {
   return (
     <section className="page">
       <header className="page-head"><h1>导入课程表</h1></header>
-      <button className="btn-ghost" onClick={() => downloadWorkbook(createImportTemplateWorkbook(), '课时薪资-导入模板.xlsx')}>下载导入模板</button>
+      <button className="btn-ghost" onClick={() => void downloadTemplate()}>下载导入模板</button>
       <input ref={inputRef} type="file" accept=".xlsx,.xls" hidden onChange={e => { const f = e.target.files?.[0]; if (f) void pickFile(f) }} />
       <button onClick={() => inputRef.current?.click()} disabled={busy}>选择 Excel 文件</button>
       {sameFile && preview && <p className="warn">该文件之前导入过，请检查下方重复标记。</p>}
@@ -92,7 +102,7 @@ export default function ImportPage() {
         </>
       )}
       {lastBatch && <button className="btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={undo} disabled={busy}>撤销上一批导入</button>}
-      {msg && <p className={msg.startsWith('导入失败') || msg.startsWith('撤销失败') ? 'error' : 'ok'}>{msg}</p>}
+      {msg && <p className={msg.startsWith('导入失败') || msg.startsWith('撤销失败') || msg.startsWith('下载失败') ? 'error' : 'ok'}>{msg}</p>}
     </section>
   )
 }

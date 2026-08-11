@@ -4,6 +4,12 @@ import * as XLSX from 'xlsx'
 // 默认跳过“添加到桌面”引导，避免遮挡页面（引导流程有独立用例）
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('ls.installGuideDismissed', '1'))
+  // 测试环境禁用系统分享/保存对话框，强制走浏览器下载兜底
+  await page.addInitScript(() => {
+    try { Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true }) } catch { /* ignore */ }
+    try { Object.defineProperty(Navigator.prototype, 'share', { value: undefined, configurable: true }) } catch { /* ignore */ }
+    try { Object.defineProperty(Navigator.prototype, 'canShare', { value: undefined, configurable: true }) } catch { /* ignore */ }
+  })
 })
 
 async function addCourseType(page: Page, name = '数学1对1', hours = '2', rate = '200') {

@@ -3,7 +3,7 @@ import { usePin } from '../hooks/usePin'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { isStandalone } from '../lib/installGuide'
 import { listCourseTypes, listRecords } from '../db/repo'
-import { createExportAllWorkbook, downloadWorkbook, parseBackupWorkbook } from '../lib/export'
+import { createExportAllWorkbook, parseBackupWorkbook, saveWorkbook } from '../lib/export'
 import { restoreBackup } from '../lib/restoreService'
 import type { CourseType, LessonRecord } from '../types'
 
@@ -41,8 +41,12 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
   const exportAll = async () => {
     try {
       const [records, courseTypes] = await Promise.all([listRecords(), listCourseTypes()])
-      downloadWorkbook(createExportAllWorkbook(records, courseTypes), `课时薪资-全部数据-${new Date().toISOString().slice(0, 10)}.xlsx`)
-      showOk('导出成功')
+      const res = await saveWorkbook(createExportAllWorkbook(records, courseTypes), `课时薪资-全部数据-${new Date().toISOString().slice(0, 10)}.xlsx`)
+      if (res === 'cancelled') showOk('已取消导出')
+      else if (res === 'shared') showOk('已通过系统分享/存储')
+      else if (res === 'saved') showOk('已保存')
+      else if (res === 'failed') showError('导出失败')
+      else showOk('已开始下载')
     } catch (err) {
       showError(`导出失败：${err instanceof Error ? err.message : String(err)}`)
     }

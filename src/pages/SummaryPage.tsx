@@ -5,7 +5,7 @@ import MonthCalendar from '../components/MonthCalendar'
 import MonthPicker from '../components/MonthPicker'
 import SummaryCard from '../components/SummaryCard'
 import { listRecords } from '../db/repo'
-import { createMonthlyWorkbook, downloadWorkbook } from '../lib/export'
+import { createMonthlyWorkbook, saveWorkbook } from '../lib/export'
 import { summarize } from '../lib/summary'
 import { buildDayMap } from '../lib/calendar'
 import { useMonth } from '../hooks/useMonth'
@@ -18,6 +18,7 @@ export default function SummaryPage() {
   const [tab, setTab] = useState<'student' | 'courseType' | 'kind'>('student')
   const [view, setView] = useState<ViewMode>('calendar')
   const [detailDate, setDetailDate] = useState<string | null>(null)
+  const [msg, setMsg] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -34,8 +35,17 @@ export default function SummaryPage() {
     [records, detailDate]
   )
 
-  const exportMonth = () => {
-    downloadWorkbook(createMonthlyWorkbook(records, groups), `课时薪资-${month}.xlsx`)
+  const exportMonth = async () => {
+    try {
+      const res = await saveWorkbook(createMonthlyWorkbook(records, groups), `课时薪资-${month}.xlsx`)
+      if (res === 'cancelled') setMsg('已取消导出')
+      else if (res === 'shared') setMsg('已通过系统分享/存储')
+      else if (res === 'saved') setMsg('已保存')
+      else if (res === 'failed') setMsg('导出失败')
+      else setMsg('已开始下载')
+    } catch (err) {
+      setMsg(`导出失败：${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 
   return (
@@ -59,7 +69,8 @@ export default function SummaryPage() {
       ) : (
         <MonthCalendar month={month} days={dayMap} selectedDate={detailDate} onSelectDay={setDetailDate} />
       )}
-      <button style={{ width: '100%', marginTop: 12 }} onClick={exportMonth}>导出本月 Excel</button>
+      <button style={{ width: '100%', marginTop: 12 }} onClick={() => void exportMonth()}>导出本月 Excel</button>
+      {msg && <p className={msg.startsWith('导出失败') ? 'error' : 'ok'} style={{ marginTop: 8 }}>{msg}</p>}
       {cancelled.length > 0 && (
         <details className="card" style={{ marginTop: 12 }}>
           <summary>已取消（{cancelled.length} 课）</summary>

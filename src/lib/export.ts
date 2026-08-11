@@ -15,15 +15,72 @@ export function createImportTemplateWorkbook(): XLSX.WorkBook {
   return wb
 }
 
-export function downloadWorkbook(wb: XLSX.WorkBook, filename: string): void {
+export type SaveResult = 'shared' | 'saved' | 'downloaded' | 'cancelled' | 'failed'
+
+/**
+ * 保存 Excel：优先系统分享（手机可“存储到文件/分享”），
+ * 其次桌面浏览器的保存对话框，最后浏览器下载兜底。
+ */
+export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise<SaveResult> {
   const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-  const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  const type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const blob = new Blob([data], { type })
+  const file = new File([blob], filename, { type })
+
+  // 1) 系统分享（仅手机端：iOS Safari / 安卓 Chrome 等；桌面浏览器走保存对话框/下载）
+  const ua = navigator.userAgent.toLowerCase()
+  const isMobile = /iphone|ipod|ipad|android/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const nav = navigator as Navigator & { canShare?: (data?: { files?: File[] }) => boolean }
+  if (isMobile && nav.canShare && nav.canShare({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: filename })
+      return 'shared'
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return 'cancelled'
+      // 分享失败 → 继续走下面的保存/下载
+    }
+  }
+
+  // 2) 桌面 Chrome/Edge：系统保存对话框
+  const win = window as Window & {
+    showSaveFilePicker?: (opts: {
+      suggestedName: string
+      types: { description: string; accept: Record<string, string[]> }[]
+    }) => Promise<{
+      createWritable: () => Promise<{ write: (b: Blob) => Promise<void>; close: () => Promise<void> }>
+    }>
+  }
+  if (typeof win.showSaveFilePicker === 'function') {
+    try {
+      const handle = await win.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'Excel 表格', accept: { [type]: ['.xlsx'] } }]
+      })
+      const writable = await handle.createWritable()
+      await writable.write(blob)
+      await writable.close()
+      return 'saved'
+    } catch (err) {
+      if (err instanceof DOMException && (err.name === 'AbortError' || err.name === 'SecurityError')) return 'cancelled'
+      // 保存失败 → 下载兜底
+    }
+  }
+
+  // 3) 兜底：浏览器下载
+  try {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+    return 'downloaded'
+  } catch {
+    return 'failed'
+  }
 }
 
 export function createExportAllWorkbook(records: LessonRecord[], courseTypes: CourseType[]): XLSX.WorkBook {
