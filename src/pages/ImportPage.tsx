@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import ImportPreview from '../components/ImportPreview'
 import { deleteBatch, getBatchByHash, listCourseTypes, listRecords } from '../db/repo'
 import { applyImport } from '../lib/importService'
-import { createImportTemplateWorkbook, saveWorkbook } from '../lib/export'
+import { createImportTemplateWorkbook, openLastExport, saveWorkbook } from '../lib/export'
 import { parseWorkbook, type ImportPreview as Preview } from '../lib/parser'
 
 export default function ImportPage() {
@@ -21,6 +21,7 @@ export default function ImportPage() {
     } catch { /* ignore */ }
   }
   const [msg, setMsg] = useState('')
+  const [showOpenFile, setShowOpenFile] = useState(false)
 
   const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err))
 
@@ -68,7 +69,8 @@ export default function ImportPage() {
     else if (res === 'shared') setMsg('已通过系统分享/存储')
     else if (res === 'saved') setMsg('已保存')
     else if (res === 'failed') setMsg('下载失败')
-    else setMsg('已开始下载')
+    else if (res === 'opened') { setMsg('已在浏览器打开文件，可点右上角分享/存储'); setShowOpenFile(true) }
+    else { setMsg('已开始下载（如无反应，点下方按钮打开文件）'); setShowOpenFile(true) }
   }
 
   const undo = async () => {
@@ -103,6 +105,7 @@ export default function ImportPage() {
       )}
       {lastBatch && <button className="btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={undo} disabled={busy}>撤销上一批导入</button>}
       {msg && <p className={msg.startsWith('导入失败') || msg.startsWith('撤销失败') || msg.startsWith('下载失败') ? 'error' : 'ok'}>{msg}</p>}
+      {showOpenFile && <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => openLastExport()}>打不开？点这里打开文件</button>}
     </section>
   )
 }

@@ -15,11 +15,22 @@ export function createImportTemplateWorkbook(): XLSX.WorkBook {
   return wb
 }
 
-export type SaveResult = 'shared' | 'saved' | 'downloaded' | 'cancelled' | 'failed'
+export type SaveResult = 'shared' | 'saved' | 'downloaded' | 'opened' | 'cancelled' | 'failed'
+
+let lastExportUrl: string | null = null
+
+/** 上次导出的文件：手动点击重新打开（绕过自动弹窗被浏览器拦截的情况） */
+export function openLastExport(): boolean {
+  if (!lastExportUrl) return false
+  window.open(lastExportUrl, '_blank')
+  return true
+}
 
 /**
- * 保存 Excel：优先系统分享（手机可“存储到文件/分享”），
- * 其次桌面浏览器的保存对话框，最后浏览器下载兜底。
+ * 保存 Excel：
+ * - iOS：直接新窗口打开文件（<a download> 在 iOS 无效），用户可在文件页分享/存储
+ * - 安卓：优先系统分享，失败/取消则浏览器下载
+ * - 桌面：系统保存对话框，最后浏览器下载兜底
  */
 export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise<SaveResult> {
   const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
@@ -29,21 +40,29 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
 
   const ua = navigator.userAgent.toLowerCase()
   const isIOS = /iphone|ipod|ipad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const isMobile = isIOS || /android/.test(ua)
+  const isAndroid = /android/.test(ua)
 
-  // 1) 手机端：只要有 navigator.share 就尝试系统分享（不依赖 canShare，避免部分浏览器误判不支持 xlsx）
+  // 1) iOS：同步打开（保留用户手势），用户可分享/存储到文件
+  if (isIOS) {
+    const url = URL.createObjectURL(blob)
+    if (lastExportUrl) URL.revokeObjectURL(lastExportUrl)
+    lastExportUrl = url
+    window.open(url, '_blank')
+    return 'opened'
+  }
+
+  // 2) 安卓：优先系统分享，失败/取消则继续下载兜底
   const nav = navigator as Navigator & { share?: (d: { files?: File[]; title?: string }) => Promise<void> }
-  if (isMobile && typeof nav.share === 'function') {
+  if (isAndroid && typeof nav.share === 'function') {
     try {
       await nav.share({ files: [file], title: filename })
       return 'shared'
-    } catch (err) {
-      // 分享被取消/不支持时不要停住，继续走保存/下载兜底，确保文件能拿到
-      void err
+    } catch {
+      // 继续走下载兜底
     }
   }
 
-  // 2) 桌面 Chrome/Edge：系统保存对话框
+  // 3) 桌面 Chrome/Edge：系统保存对话框
   const win = window as Window & {
     showSaveFilePicker?: (opts: {
       suggestedName: string
@@ -68,9 +87,11 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
     }
   }
 
-  // 3) 兜底：浏览器下载（iOS 上 <a download> 无效，改用新标签页打开文件供存储/分享）
+  // 4) 兜底：浏览器下载
   try {
     const url = URL.createObjectURL(blob)
+    if (lastExportUrl) URL.revokeObjectURL(lastExportUrl)
+    lastExportUrl = url
     const a = document.createElement('a')
     a.href = url
     a.download = filename
@@ -78,15 +99,13 @@ export async function saveWorkbook(wb: XLSX.WorkBook, filename: string): Promise
     document.body.appendChild(a)
     a.click()
     a.remove()
-    if (isIOS) {
-      window.open(url, '_blank')
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
     return 'downloaded'
   } catch {
     return 'failed'
   }
 }
+
+
 export function createExportAllWorkbook(records: LessonRecord[], courseTypes: CourseType[]): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()
   const recRows = [

@@ -5,7 +5,7 @@ import MonthCalendar from '../components/MonthCalendar'
 import MonthPicker from '../components/MonthPicker'
 import SummaryCard from '../components/SummaryCard'
 import { listRecords } from '../db/repo'
-import { createMonthlyWorkbook, saveWorkbook } from '../lib/export'
+import { createMonthlyWorkbook, openLastExport, saveWorkbook } from '../lib/export'
 import { summarize } from '../lib/summary'
 import { buildDayMap } from '../lib/calendar'
 import { useMonth } from '../hooks/useMonth'
@@ -19,6 +19,7 @@ export default function SummaryPage() {
   const [view, setView] = useState<ViewMode>('calendar')
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
+  const [showOpenFile, setShowOpenFile] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -43,7 +44,8 @@ export default function SummaryPage() {
       else if (res === 'shared') setMsg('已通过系统分享/存储')
       else if (res === 'saved') setMsg('已保存')
       else if (res === 'failed') setMsg('导出失败')
-      else setMsg('已开始下载')
+      else if (res === 'opened') { setMsg('已在浏览器打开 Excel，点右上角分享可存储到文件'); setShowOpenFile(true) }
+      else { setMsg('已开始下载（如无反应，点下方按钮打开文件）'); setShowOpenFile(true) }
     } catch (err) {
       setMsg(`导出失败：${err instanceof Error ? err.message : String(err)}`)
     }
@@ -72,6 +74,7 @@ export default function SummaryPage() {
       )}
       <button style={{ width: '100%', marginTop: 12 }} onClick={() => void exportMonth()}>导出本月 Excel</button>
       {msg && <p className={msg.startsWith('导出失败') ? 'error' : 'ok'} style={{ marginTop: 8 }}>{msg}</p>}
+      {showOpenFile && <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => openLastExport()}>打不开？点这里打开文件</button>}
       {cancelled.length > 0 && (
         <details className="card" style={{ marginTop: 12 }}>
           <summary>已取消（{cancelled.length} 课）</summary>

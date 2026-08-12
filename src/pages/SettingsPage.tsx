@@ -3,7 +3,7 @@ import { usePin } from '../hooks/usePin'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { isStandalone } from '../lib/installGuide'
 import { listCourseTypes, listRecords } from '../db/repo'
-import { createExportAllWorkbook, parseBackupWorkbook, saveWorkbook } from '../lib/export'
+import { createExportAllWorkbook, openLastExport, parseBackupWorkbook, saveWorkbook } from '../lib/export'
 import { restoreBackup } from '../lib/restoreService'
 import type { CourseType, LessonRecord } from '../types'
 
@@ -21,6 +21,7 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
   const [pendingBackup, setPendingBackup] = useState<BackupData | null>(null)
   const [oldPin, setOldPin] = useState('')
   const [newPin, setNewPin] = useState('')
+  const [showOpenFile, setShowOpenFile] = useState(false)
 
   const showOk = (text: string) => { setMsgKind('ok'); setMsg(text) }
   const showError = (text: string) => { setMsgKind('error'); setMsg(text) }
@@ -47,7 +48,8 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
       else if (res === 'shared') showOk('已通过系统分享/存储')
       else if (res === 'saved') showOk('已保存')
       else if (res === 'failed') showError('导出失败')
-      else showOk('已开始下载')
+      else if (res === 'opened') { showOk('已在浏览器打开 Excel，点右上角分享可存储到文件'); setShowOpenFile(true) }
+      else { showOk('已开始下载（如无反应，点下方按钮打开文件）'); setShowOpenFile(true) }
     } catch (err) {
       showError(`导出失败：${err instanceof Error ? err.message : String(err)}`)
     }
@@ -145,6 +147,7 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
         <p className="muted">课时薪资 v0.1 · 数据仅存储在本机浏览器（IndexedDB），不联网不上传。备份文件请自行妥善保管。</p>
       </div>
       {msg && <p className={msgKind === 'error' ? 'error' : 'ok'}>{msg}</p>}
+      {showOpenFile && <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => openLastExport()}>打不开？点这里打开文件</button>}
     </section>
   )
 }
