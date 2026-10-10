@@ -1,0 +1,12 @@
+<!-- 通用 Bottom Sheet：对应 Web 端 src/web/components/Sheet.tsx -->
+<view wx:if="{{open}}" class="sheet-mask" bindtap="onMaskTap">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text class="sheet-title">{{title}}</text>
+      <view class="sheet-close" bindtap="onCloseTap">关闭</view>
+    </view>
+    <view class="sheet-body">
+      <slot></slot>
+    </view>
+  </view>
+</view>

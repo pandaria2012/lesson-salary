@@ -1,0 +1,107 @@
+<!-- 月度汇总：对应 Web 端 src/web/pages/SummaryPage.tsx -->
+<view class="page">
+  <view class="page-head">
+    <text class="title">月度汇总</text>
+  </view>
+
+  <month-picker month="{{month}}" bind:change="onMonthChange" />
+
+  <!-- 摘要卡 -->
+  <view class="card summary-card">
+    <view class="sum-main">
+      本月收入
+      <text class="amount">¥{{totalAmount}}</text>
+    </view>
+    <view class="sum-sub">
+      <text>课时 {{totalHours}}</text>
+      <text>有效 {{totalCount}} 课次</text>
+      <text wx:if="{{cancelledCount > 0}}">取消 {{cancelledCount}}</text>
+    </view>
+  </view>
+
+  <!-- 视图切换 -->
+  <view class="toolbar" style="margin-top:12px">
+    <view class="chip {{view === 'calendar' ? 'active' : ''}}" data-view="calendar" bindtap="onViewChange">日历</view>
+    <view class="chip {{view === 'list' ? 'active' : ''}}" data-view="list" bindtap="onViewChange">列表</view>
+  </view>
+
+  <!-- 日历视图 -->
+  <block wx:if="{{view === 'calendar'}}">
+    <view class="card calendar">
+      <view class="cal-week">
+        <text class="wk">一</text><text class="wk">二</text><text class="wk">三</text>
+        <text class="wk">四</text><text class="wk">五</text><text class="wk">六</text><text class="wk">日</text>
+      </view>
+      <view class="cal-grid">
+        <view
+          wx:for="{{calCells}}"
+          wx:key="index"
+          class="cal-cell {{item.isToday ? 'today' : ''}} {{item.date && item.date === detailDate ? 'selected' : ''}}"
+          data-date="{{item.date}}"
+          bindtap="onSelectDay"
+        >
+          <block wx:if="{{item.day}}">
+            <text class="cal-day">{{item.day}}</text>
+            <view class="cal-info">
+              <text wx:if="{{item.amount}}" class="cal-amount">{{item.amount}}</text>
+              <text wx:if="{{item.count > 0}}" class="cal-count">{{item.count}}课</text>
+              <text wx:if="{{item.cancelledCount > 0}}" class="cal-count cancelled">取消{{item.cancelledCount}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 列表视图 -->
+  <block wx:else>
+    <view class="group-tabs">
+      <view class="tab {{tab === 'student' ? 'active' : ''}}" data-tab="student" bindtap="onTabChange">按学生</view>
+      <view class="tab {{tab === 'courseType' ? 'active' : ''}}" data-tab="courseType" bindtap="onTabChange">按课程类型</view>
+      <view class="tab {{tab === 'kind' ? 'active' : ''}}" data-tab="kind" bindtap="onTabChange">按教学形式</view>
+    </view>
+
+    <view wx:if="{{hasGroups}}" class="card">
+      <view class="group-row" wx:for="{{groups}}" wx:key="label">
+        <view class="g-left">
+          <text>{{item.label}}</text>
+          <text class="muted">{{item.sub}}</text>
+        </view>
+        <text class="g-right">{{item.amount}}</text>
+      </view>
+    </view>
+    <view wx:else class="empty">暂无数据</view>
+  </block>
+
+  <!-- 空态引导 -->
+  <view wx:if="{{!hasAnyRecord}}" class="card" style="margin-top:12px;text-align:center">
+    <text class="muted">本月还没有记录</text>
+    <view class="btn-row" style="margin-top:12px">
+      <view class="btn ghost" bindtap="onGoRecords">去补录</view>
+      <view class="btn" bindtap="onExportMonth">导入课程表</view>
+    </view>
+  </view>
+
+  <view wx:else class="btn block" style="margin-top:12px" bindtap="onExportMonth">导出本月 Excel</view>
+
+  <!-- 已取消（折叠） -->
+  <view wx:if="{{cancelledRows.length > 0}}" class="card" style="margin-top:12px">
+    <view class="group-head" style="margin:0" bindtap="onToggleCancelled">
+      <text class="g-title">已取消（{{cancelledRows.length}} 课）</text>
+      <text class="muted">{{cancelledOpen ? '收起' : '展开'}}</text>
+    </view>
+    <block wx:if="{{cancelledOpen}}">
+      <view class="muted" style="margin:8px 0 0" wx:for="{{cancelledRows}}" wx:key="id">{{item.text}}</view>
+    </block>
+  </view>
+</view>
+
+<!-- 当天明细 -->
+<sheet open="{{detailOpen}}" title="{{detailTitle}}" bind:close="onCloseDetail">
+  <view wx:if="{{detailRows.length === 0}}" class="muted">当天没有记录</view>
+  <view wx:else>
+    <view class="group-row" wx:for="{{detailRows}}" wx:key="id">
+      <text>{{item.text}}</text>
+    </view>
+  </view>
+</sheet>

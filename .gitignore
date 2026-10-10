@@ -10,3 +10,10 @@ project.private.config.json
 
 # 构建时把 TEMP 指到工作区内产生的临时目录（本机 %TEMP% 被 esbuild 拒绝访问）
 .tmp-build/
+
+# core 编译产物（待决项 T3）：不入库，用 npm run build:core 生成。
+# 不入库的理由：产物是机器生成的；更重要的是——若入库，改了 src/core 却忘记重建时
+# 小程序会静默运行旧逻辑。不入库时 DevTools 直接报模块缺失，属于 fail-safe。
+# 本地"忘记重建"由 npm run check:core 的 src-core-hash 校验兜住。
+miniprogram/core/index.js
+miniprogram/packageImport/core-workbook.js

@@ -1,0 +1,44 @@
+<!-- 备份与恢复（分包页面）：纯本地架构下唯一的数据保全手段 -->
+<view class="page">
+  <view class="page-head">
+    <text class="title">备份与恢复</text>
+  </view>
+
+  <view style="height:12px"></view>
+
+  <view class="card" style="border-left:4px solid var(--warn)">
+    <text class="warn">数据仅保存在本机。删除小程序、更换手机或清理微信缓存都会丢失数据。</text>
+    <view class="muted" style="margin-top:6px">请定期导出备份，并转发到聊天或网盘妥善保存。</view>
+  </view>
+
+  <view class="card">
+    <view class="sec-title" style="font-size:15px;font-weight:600">当前数据</view>
+    <view class="muted" style="margin-top:6px">上课记录 {{recordCount}} 条 · 课程类型 {{courseTypeCount}} 个</view>
+  </view>
+
+  <!-- 导出备份 -->
+  <view class="card">
+    <view class="sec-title" style="font-size:15px;font-weight:600">导出全部数据</view>
+    <view class="muted" style="margin-top:6px">生成含「上课记录」「课程类型」的 Excel 文件，可再导回恢复。</view>
+    <view class="btn block" style="margin-top:10px" bindtap="onExportAll">{{busy ? '处理中…' : '导出备份文件'}}</view>
+  </view>
+
+  <!-- 从备份恢复 -->
+  <view class="card">
+    <view class="sec-title" style="font-size:15px;font-weight:600">从备份恢复</view>
+    <view class="muted" style="margin-top:6px">选择之前导出的备份文件，可合并或覆盖恢复。</view>
+    <view class="btn ghost block" style="margin-top:10px" bindtap="onPickBackup">选择备份文件</view>
+
+    <block wx:if="{{pending}}">
+      <view class="dup-warn" style="margin-top:10px">
+        <view class="warn">已解析：{{pendingSummary}}</view>
+        <view class="muted">合并会保留现有数据并按记录 id 去重；覆盖会先清空本机数据。</view>
+      </view>
+      <view class="btn block" bindtap="onRestore" data-mode="merge">合并恢复（推荐）</view>
+      <view class="btn danger block" style="margin-top:8px" bindtap="onRestore" data-mode="overwrite">覆盖恢复（危险）</view>
+      <view class="btn ghost block" style="margin-top:8px" bindtap="onCancelPending">取消</view>
+    </block>
+  </view>
+
+  <view wx:if="{{msg}}" class="{{msgClass}}" style="margin-top:10px">{{msg}}</view>
+</view>

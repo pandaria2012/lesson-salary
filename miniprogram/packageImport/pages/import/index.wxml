@@ -1,0 +1,49 @@
+<!-- 导入课程表（分包页面）：对应 Web 端 src/web/pages/ImportPage.tsx -->
+<view class="page">
+  <view class="page-head">
+    <text class="title">导入课程表</text>
+  </view>
+
+  <view style="height:12px"></view>
+
+  <view class="card">
+    <view class="muted">小程序需先把 Excel 发到微信（例如发给「文件传输助手」），再从聊天记录中选择。</view>
+    <view class="btn ghost block" style="margin-top:10px" bindtap="onDownloadTemplate">下载导入模板</view>
+    <view class="btn block" style="margin-top:8px" bindtap="onPickFile">{{busy ? '处理中…' : '从聊天记录选择 Excel'}}</view>
+  </view>
+
+  <view wx:if="{{sameFile}}" class="card" style="border-left:4px solid var(--warn)">
+    <text class="warn">该文件之前导入过，请注意下方重复标记。</text>
+  </view>
+
+  <!-- 预览 -->
+  <block wx:if="{{rows.length > 0}}">
+    <view class="card">
+      <view style="display:flex;justify-content:space-between;align-items:center">
+        <text style="font-weight:600">{{summary}}</text>
+        <view class="btn-row" style="margin:0">
+          <view class="btn ghost" style="min-height:32px;font-size:13px;padding:0 10px" bindtap="onSelectAll">全选</view>
+          <view class="btn ghost" style="min-height:32px;font-size:13px;padding:0 10px" bindtap="onSelectNone">全不选</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:for="{{rows}}" wx:key="index" class="card preview-row" data-index="{{item.index}}" bindtap="onToggleRow">
+      <view class="checkbox {{item.checked ? 'checked' : ''}}">{{item.checked ? '✓' : ''}}</view>
+      <view class="preview-body">
+        <view>{{item.title}}</view>
+        <view class="muted">{{item.detail}}</view>
+        <view wx:if="{{item.tags.length > 0}}" style="margin-top:4px">
+          <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="text" class="tag {{t.cls}}">{{t.text}}</text>
+        </view>
+        <view wx:if="{{item.issues}}" class="issues">{{item.issues}}</view>
+      </view>
+    </view>
+
+    <view class="btn block" style="margin-top:12px" bindtap="onConfirm">{{busy ? '导入中…' : '确认导入'}}</view>
+  </block>
+
+  <view wx:if="{{lastBatchId}}" class="btn danger block" style="margin-top:8px" bindtap="onUndo">撤销本次导入</view>
+
+  <view wx:if="{{msg}}" class="{{msgClass}}" style="margin-top:10px">{{msg}}</view>
+</view>

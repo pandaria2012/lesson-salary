@@ -41,6 +41,17 @@ export async function parseWorkbook(
   }
 }
 
+/**
+ * 把 workbook 序列化为 ArrayBuffer。
+ *
+ * 存在的意义：两端都需要"得到字节"，但消费方式不同
+ * （Web → Blob 下载；小程序 → FileSystemManager.writeFile），
+ * 且都不需要接触 XLSX 库本身。故在此收口，避免把 SheetJS 泄到页面层。
+ */
+export function workbookToArrayBuffer(wb: XLSX.WorkBook): ArrayBuffer {
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer
+}
+
 export function createImportTemplateWorkbook(): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([

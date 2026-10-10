@@ -1,0 +1,2 @@
+/* 导入页：分行预览的卡片间距 */
+.preview-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }

@@ -245,9 +245,14 @@ Dexie 实现直接映射到 `db.transaction('rw', ...)`。两者对外语义一�
 | 形态 | 体积 | 占主包 2 MB |
 |---|---|---|
 | `xlsx.js` 未压缩 | 816 KB | 40% |
-| minify 后 | **424 KB** | 21% |
+| minify 后（**不含** cpexcel） | **424 KB** | 21% |
+| minify 后（**含** cpexcel，即 bundle 默认结果） | **1231 KB** | 60% |
 
-即使压缩后，XLSX 仍会吃掉主包约五分之一，而导入/导出属于低频操作、不该进入首屏加载路径 —— 分包决策在压缩后依然成立。分包产物实际大小在实施阶段（集成 `core/workbook.ts` 后）复测。
+> ⚠️ **修正（实施阶段发现）**：424 KB 这个数字是用 `--minify`（**不 bundle**）量出来的，它漏掉了 `xlsx.js` 第 13 行的硬依赖 `require('./dist/cpexcel.js')`。真正 bundle 时 cpexcel 会带进 **793 KB**，使分包产物达到 1231 KB。
+>
+> 处置：构建脚本把 cpexcel 替换为空模块（`scripts/build-core.mjs` 的 `dropCpexcelPlugin`），分包产物回落到 **437 KB**。安全性依据：(a) 本应用只处理 `.xlsx`（UTF-8 + XML），codepage 仅用于旧式 `.xls`；(b) SheetJS 官方也提供不含 cpexcel 的 `xlsx.core.min.js`（426 KB）构建。已实测验证：读写含中文的 `.xlsx`、SHA-256 指纹、备份往返全部正确。
+
+即使按 437 KB 计，XLSX 仍会吃掉主包约五分之一，而导入/导出属于低频操作、不该进入首屏加载路径 —— 分包决策成立。实测主包产物仅 **20.3 KB**。
 
 ---
 

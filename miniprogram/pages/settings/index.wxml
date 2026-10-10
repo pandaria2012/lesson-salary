@@ -1,0 +1,62 @@
+<!-- 设置：对应 Web 端 src/web/pages/SettingsPage.tsx（移除 PWA 与 PIN） -->
+<view class="page settings">
+  <view class="page-head">
+    <text class="title">设置</text>
+  </view>
+
+  <view style="height:12px"></view>
+
+  <!-- 备份提醒条 -->
+  <view wx:if="{{showRemindBanner}}" class="card" style="border-left:4px solid var(--warn)">
+    <text class="warn">数据仅保存在本机，建议现在导出一次备份。</text>
+    <view class="btn-row">
+      <view class="btn" bindtap="onGoBackup">去备份</view>
+    </view>
+  </view>
+
+  <!-- 备份 -->
+  <view class="card">
+    <view class="sec-title">备份与恢复</view>
+    <text class="muted">导出全部数据（含课程类型与记录），换手机或重装后可恢复。</text>
+    <view class="muted" style="margin-top:6px;font-size:13px">上次备份：{{lastBackupAt}}</view>
+    <view class="btn block" style="margin-top:10px" bindtap="onGoBackup">导出全部数据 / 从备份恢复</view>
+    <view class="btn ghost block" style="margin-top:8px" bindtap="onGoImport">导入课程表（Excel）</view>
+  </view>
+
+  <!-- 存储 -->
+  <view class="card">
+    <view class="sec-title">存储空间</view>
+    <view class="muted">已用 {{storageUsed}} / {{storageLimit}}（{{storagePercent}}%）</view>
+    <view style="height:8px;background:var(--border);border-radius:4px;margin-top:8px;overflow:hidden">
+      <view style="height:100%;width:{{storagePercent}}%;background:{{storagePercent >= 80 ? '#d93025' : '#1f6feb'}}"></view>
+    </view>
+    <view wx:if="{{storagePercent >= 80}}" class="warn" style="margin-top:8px">
+      存储接近上限，建议导出备份后清理部分历史记录。
+    </view>
+  </view>
+
+  <!-- 备份提醒开关 -->
+  <view class="card">
+    <view class="sec-title">备份提醒</view>
+    <view class="muted">超过 30 天未导出备份时提醒一次，避免数据意外丢失。</view>
+    <view class="setting-item" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+      <text>开启提醒</text>
+      <switch checked="{{!remindDisabled}}" bindchange="onToggleRemind" color="#1f6feb" />
+    </view>
+  </view>
+
+  <!-- 数据删除 -->
+  <view class="card">
+    <view class="sec-title">清空数据</view>
+    <view class="muted">删除本机全部课程类型、上课记录与设置。数据只在本机，删除后无法恢复。</view>
+    <view class="btn danger block" style="margin-top:10px" bindtap="onClearAll">{{busy ? '处理中…' : '清空所有数据'}}</view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="card">
+    <view class="sec-title">关于</view>
+    <view class="muted">三尺课时账 v1.0.0</view>
+    <view class="muted">数据仅保存在本机，不联网、不上传、无需注册。</view>
+    <view class="btn ghost block" style="margin-top:10px" bindtap="onAbout">查看说明</view>
+  </view>
+</view>

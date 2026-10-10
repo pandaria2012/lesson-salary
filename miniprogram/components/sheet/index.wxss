@@ -1,0 +1,10 @@
+.sheet-close {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--muted);
+  color: #fff;
+  font-size: 15px;
+}

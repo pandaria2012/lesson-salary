@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "月度汇总",
+  "usingComponents": {
+    "month-picker": "/components/month-picker/index",
+    "sheet": "/components/sheet/index"
+  }
+}

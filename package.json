@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:core": "node scripts/build-core.mjs",
+    "check:core": "node scripts/check-core-sync.mjs",
+    "check:mp": "python scripts/check-mp-structure.py",
+    "verify": "npm run check:core && npm test && tsc --noEmit && tsc -p miniprogram/tsconfig.json --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"
@@ -22,6 +26,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "fake-indexeddb": "^6.0.0",
+    "miniprogram-api-typings": "^5.2.3",
     "typescript": "^5.5.4",
     "vite": "^5.4.8",
     "vite-plugin-pwa": "^0.20.5",

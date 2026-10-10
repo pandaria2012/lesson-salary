@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "上课记录",
+  "usingComponents": {
+    "month-picker": "/components/month-picker/index",
+    "sheet": "/components/sheet/index"
+  }
+}

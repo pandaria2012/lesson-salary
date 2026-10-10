@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "课程类型",
+  "usingComponents": {
+    "sheet": "/components/sheet/index"
+  }
+}

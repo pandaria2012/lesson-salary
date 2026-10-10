@@ -1,0 +1,60 @@
+{
+  "pages": [
+    "pages/summary/index",
+    "pages/records/index",
+    "pages/courses/index",
+    "pages/settings/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1f6feb",
+    "navigationBarTitleText": "三尺课时账",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f6f8"
+  },
+  "tabBar": {
+    "color": "#8a8f98",
+    "selectedColor": "#1f6feb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/summary/index",
+        "text": "汇总",
+        "iconPath": "images/tab-summary.png",
+        "selectedIconPath": "images/tab-summary-active.png"
+      },
+      {
+        "pagePath": "pages/records/index",
+        "text": "记录",
+        "iconPath": "images/tab-records.png",
+        "selectedIconPath": "images/tab-records-active.png"
+      },
+      {
+        "pagePath": "pages/courses/index",
+        "text": "课程",
+        "iconPath": "images/tab-courses.png",
+        "selectedIconPath": "images/tab-courses-active.png"
+      },
+      {
+        "pagePath": "pages/settings/index",
+        "text": "设置",
+        "iconPath": "images/tab-settings.png",
+        "selectedIconPath": "images/tab-settings-active.png"
+      }
+    ]
+  },
+  "subPackages": [
+    {
+      "root": "packageImport",
+      "name": "import",
+      "pages": [
+        "pages/import/index",
+        "pages/export/index",
+        "pages/backup/index"
+      ]
+    }
+  ],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

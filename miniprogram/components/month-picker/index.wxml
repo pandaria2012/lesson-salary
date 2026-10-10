@@ -1,0 +1,7 @@
+<view class="month-picker">
+  <view class="nav-btn" bindtap="onPrev">‹</view>
+  <picker mode="date" fields="month" value="{{month}}" bindchange="onPick">
+    <view class="month-label">{{month}}</view>
+  </picker>
+  <view class="nav-btn" bindtap="onNext">›</view>
+</view>
