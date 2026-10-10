@@ -11,6 +11,9 @@
     "check:mp": "python scripts/check-mp-structure.py && python scripts/check-mp-bindings.py && python scripts/check-mp-nav.py",
     "verify": "npm run check:core && npm run check:mp && npm test && tsc --noEmit && tsc -p miniprogram/tsconfig.json --noEmit",
     "verify:all": "npm run verify && npm run test:e2e",
+    "mp:smoke": "node scripts/mp-automator.mjs",
+    "mp:smoke:shot": "node scripts/mp-automator.mjs --shot",
+    "mp:check": "node scripts/mp-automator.mjs --check",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"

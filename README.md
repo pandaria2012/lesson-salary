@@ -65,14 +65,43 @@ npm run build:core   # 把 src/core 编译到 miniprogram/（产物不入库，�
 
 然后用**微信开发者工具**打开**仓库根目录**（`project.config.json` 已配好 `miniprogramRoot: miniprogram/`，含 AppID）。
 
+> ⚠️ `project.config.json` 里 **`setting.useCompilerPlugins` 必须含 `"typescript"`**。
+> 小程序代码包只接受 `wxml/wxss/js/json/wxs`；项目只写 `.ts` 时，DevTools 会报
+> 「未找到 pages[0] 对应的 pages/summary/index.js 文件」，**整个小程序无法启动**。
+
+### 真机（模拟器）调试与冒烟
+
+已接入官方 `miniprogram-automator`，可在模拟器中真实运行并断言：
+
+```bash
+npm run mp:smoke        # 前置自检 → 连接 → 17 项冒烟
+npm run mp:smoke:shot   # 额外对 4 个主包页面截图到 test-results/
+```
+
+覆盖内容：主包 4 页 + 分包 3 页可加载、wx storage 读写一致、**真实点击补录** →
+`core` → `wxRepo` → `wx.storage` 全链路、汇总金额核对（¥200.00）、存储信息读取。
+
+前置条件（`npm run mp:smoke` 会自动自检并明确指出缺哪一项）：
+
+| 条件 | 如何满足 |
+|---|---|
+| 服务端口开启 | 微信开发者工具 → 设置 → 安全设置 → 服务端口（**只能人工开**） |
+| 项目窗口已打开 | 脚本自动执行 `cli open --project .` |
+| TS 编译插件 | `project.config.json` 的 `useCompilerPlugins` |
+| core 产物存在 | `npm run build:core` |
+
+> 服务端口无法由 CLI 自行开启 —— 已从源码确认：CLI 检查 `User Data/<hash>/Default/.ide-status`
+> 是否等于 `"On"`，而该文件只由 GUI 写入（`IdeService` 写 `"On"`，关闭时 `_writeIdeStatusOff` 写 `"Off"`）。
+
 ### 日常命令
 
 ```bash
 npm run build:core   # 改过 src/core 后必须重新构建
 npm run check:core   # 校验产物是否与 src/core 同步（防忘记重建）
-npm run check:mp     # 校验小程序结构、WXML 事件绑定、页面跳转目标
+npm run check:mp     # 校验小程序结构、组件样式隔离、WXML 绑定、页面跳转
 npm run verify       # 全量静态验证：check:core + check:mp + 132 测试 + 两端类型检查
 npm run verify:all   # 再叠加 Playwright e2e（14 用例；会构建并起预览服务）
+npm run mp:smoke     # 真机（模拟器）冒烟：需先开启服务端口
 ```
 
 > **改了 `src/core` 却忘记 `build:core`** 是最容易犯的错：小程序会静默运行旧逻辑。
