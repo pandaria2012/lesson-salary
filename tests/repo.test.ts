@@ -1,12 +1,12 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/db/db'
+import { db } from '../src/web/db/db'
 import {
   addBatch, deleteBatch, deleteCourseType, deleteRecord,
   getBatchByHash, getSetting, listCourseTypes, listRecords,
   listStudentNames, saveCourseType, saveRecord, setSetting
-} from '../src/db/repo'
-import type { CourseType, ImportBatch, LessonRecord } from '../src/types'
+} from '../src/web/db/repo'
+import type { CourseType, ImportBatch, LessonRecord } from '../src/core/types'
 
 beforeEach(async () => {
   await db.delete()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fmtHours, fmtMoney } from '../src/lib/format'
+import { fmtHours, fmtMoney } from '../src/core/format'
 
 describe('format', () => {
   it('金额保留两位', () => {

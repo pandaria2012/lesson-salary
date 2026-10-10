@@ -4,3 +4,9 @@ dist/
 test-results/
 playwright-report/
 *.log
+
+# 微信开发者工具「本地私有配置」：个人开发设置，约定不入库
+project.private.config.json
+
+# 构建时把 TEMP 指到工作区内产生的临时目录（本机 %TEMP% 被 esbuild 拒绝访问）
+.tmp-build/

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
-import type { CourseType, LessonRecord } from '../types'
-import { fmtMoney } from './format'
-import { computeHours, parseTimeRange } from './time'
+import type { CourseType, LessonRecord } from '../core/types'
+import { fmtMoney } from '../core/format'
+import { computeHours, parseTimeRange } from '../core/time'
 
 export function createImportTemplateWorkbook(): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()

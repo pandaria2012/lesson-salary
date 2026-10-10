@@ -1,5 +1,5 @@
-import { fmtHours, fmtMoney } from '../lib/format'
-import type { Summary } from '../lib/summary'
+import { fmtHours, fmtMoney } from '../../core/format'
+import type { Summary } from '../../core/summary'
 
 export default function SummaryCard({ s }: { s: Summary }) {
   return (

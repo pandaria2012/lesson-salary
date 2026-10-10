@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import ImportPreview from '../components/ImportPreview'
 import { deleteBatch, getBatchByHash, listCourseTypes, listRecords } from '../db/repo'
-import { applyImport } from '../lib/importService'
-import { createImportTemplateWorkbook, openLastExport, saveWorkbook } from '../lib/export'
-import { parseWorkbook, type ImportPreview as Preview } from '../lib/parser'
+import { applyImport } from '../../lib/importService'
+import { createImportTemplateWorkbook, openLastExport, saveWorkbook } from '../../lib/export'
+import { parseWorkbook, type ImportPreview as Preview } from '../../lib/parser'
 
 export default function ImportPage() {
   const inputRef = useRef<HTMLInputElement>(null)

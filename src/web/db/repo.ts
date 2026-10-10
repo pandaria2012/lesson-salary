@@ -1,5 +1,5 @@
 import { db } from './db'
-import type { CourseType, ImportBatch, LessonRecord } from '../types'
+import type { CourseType, ImportBatch, LessonRecord } from '../../core/types'
 
 export async function listCourseTypes(): Promise<CourseType[]> {
   return db.courseTypes.orderBy('name').toArray()

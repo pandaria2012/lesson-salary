@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx'
-import type { CourseType, LessonRecord } from '../types'
-import { computeHours, parseExcelDate, parseTimeRange } from './time'
+import type { CourseType, LessonRecord } from '../core/types'
+import { computeHours, parseExcelDate, parseTimeRange } from '../core/time'
 
 const ALIASES: Record<'courseTypeName' | 'rate' | 'student' | 'date' | 'time', string[]> = {
   courseTypeName: ['课程类型', '课程', '科目', '类型'],

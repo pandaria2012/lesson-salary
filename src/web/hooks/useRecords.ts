@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { deleteRecord, listRecords, saveRecord } from '../db/repo'
-import type { LessonRecord } from '../types'
+import type { LessonRecord } from '../../core/types'
 
 export function useRecords(month: string) {
   const [items, setItems] = useState<LessonRecord[]>([])

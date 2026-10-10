@@ -1,5 +1,5 @@
-import { db } from '../db/db'
-import type { CourseType, LessonRecord } from '../types'
+import { db } from '../web/db/db'
+import type { CourseType, LessonRecord } from '../core/types'
 
 export async function restoreBackup(
   backup: { records: LessonRecord[]; courseTypes: CourseType[] },

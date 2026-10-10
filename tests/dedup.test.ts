@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { duplicateKey, findDuplicateRecord } from '../src/lib/dedup'
-import type { LessonRecord } from '../src/types'
+import { duplicateKey, findDuplicateRecord } from '../src/core/dedup'
+import type { LessonRecord } from '../src/core/types'
 
 function rec(over: Partial<LessonRecord> = {}): LessonRecord {
   return {

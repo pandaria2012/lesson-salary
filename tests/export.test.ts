@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
 import { createExportAllWorkbook, createImportTemplateWorkbook, createMonthlyWorkbook, parseBackupWorkbook } from '../src/lib/export'
-import type { CourseType, LessonRecord } from '../src/types'
+import type { CourseType, LessonRecord } from '../src/core/types'
 
 function sheetRows(wb: XLSX.WorkBook, name: string): unknown[][] {
   return XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[name], { header: 1, defval: '' })

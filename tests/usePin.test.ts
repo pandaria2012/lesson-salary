@@ -2,8 +2,8 @@ import 'fake-indexeddb/auto'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/db/db'
-import { usePin } from '../src/hooks/usePin'
+import { db } from '../src/web/db/db'
+import { usePin } from '../src/web/hooks/usePin'
 
 let api: ReturnType<typeof usePin> | null = null
 

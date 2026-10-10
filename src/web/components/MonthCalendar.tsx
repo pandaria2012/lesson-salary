@@ -1,4 +1,4 @@
-import { monthGrid, todayStr, type DayInfo } from '../lib/calendar'
+import { monthGrid, todayStr, type DayInfo } from '../../core/calendar'
 
 const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日']
 

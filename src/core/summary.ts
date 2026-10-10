@@ -1,4 +1,4 @@
-import type { LessonRecord } from '../types'
+import type { LessonRecord } from './types'
 
 export interface GroupStats { label: string; count: number; hours: number; amount: number }
 export interface Summary {

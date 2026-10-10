@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Sheet from './Sheet'
-import type { CourseType, CourseTypeStatus } from '../types'
+import type { CourseType, CourseTypeStatus } from '../../core/types'
 
 export default function CourseTypeFormSheet({ open, initial, onClose, onSaved }: {
   open: boolean

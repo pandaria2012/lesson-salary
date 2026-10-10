@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { deleteCourseType, listCourseTypes, saveCourseType } from '../db/repo'
-import type { CourseType } from '../types'
+import type { CourseType } from '../../core/types'
 
 export function useCourseTypes() {
   const [items, setItems] = useState<CourseType[]>([])

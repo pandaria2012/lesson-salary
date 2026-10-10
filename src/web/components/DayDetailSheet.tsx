@@ -1,7 +1,7 @@
 import Sheet from './Sheet'
-import { fmtDayLabel } from '../lib/calendar'
-import { fmtHours, fmtMoney } from '../lib/format'
-import type { LessonRecord } from '../types'
+import { fmtDayLabel } from '../../core/calendar'
+import { fmtHours, fmtMoney } from '../../core/format'
+import type { LessonRecord } from '../../core/types'
 
 export default function DayDetailSheet({ open, date, records, onClose }: {
   open: boolean

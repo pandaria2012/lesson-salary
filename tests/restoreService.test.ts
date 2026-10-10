@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/db/db'
-import { listCourseTypes, listRecords } from '../src/db/repo'
+import { db } from '../src/web/db/db'
+import { listCourseTypes, listRecords } from '../src/web/db/repo'
 import { restoreBackup } from '../src/lib/restoreService'
-import type { CourseType, LessonRecord } from '../src/types'
+import type { CourseType, LessonRecord } from '../src/core/types'
 
 beforeEach(async () => { await db.delete(); await db.open() })
 

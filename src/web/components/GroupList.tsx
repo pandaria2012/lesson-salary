@@ -1,5 +1,5 @@
-import { fmtHours, fmtMoney } from '../lib/format'
-import type { GroupStats } from '../lib/summary'
+import { fmtHours, fmtMoney } from '../../core/format'
+import type { GroupStats } from '../../core/summary'
 
 export default function GroupList({ groups }: { groups: GroupStats[] }) {
   if (groups.length === 0) return <p className="empty">暂无数据</p>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
 import { buildPreviewFromRows, detectColumns, parseWorkbook } from '../src/lib/parser'
-import type { CourseType, LessonRecord } from '../src/types'
+import type { CourseType, LessonRecord } from '../src/core/types'
 
 const courseTypes: CourseType[] = [
   { id: 'ct1', name: '1对1', type: '一对一', status: 'enabled', defaultHours: 2, defaultRate: 200, createdAt: 't' }

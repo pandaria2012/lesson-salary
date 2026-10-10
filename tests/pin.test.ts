@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { constantTimeEqual, generateSalt, hashPin, verifyPin } from '../src/lib/pin'
+import { constantTimeEqual, generateSalt, hashPin, verifyPin } from '../src/web/lib/pin'
 
 describe('pin', () => {
   it('相同 pin+盐 哈希一致，verify 通过', async () => {

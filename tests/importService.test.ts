@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/db/db'
-import { getBatchByHash, listCourseTypes, listRecords } from '../src/db/repo'
+import { db } from '../src/web/db/db'
+import { getBatchByHash, listCourseTypes, listRecords } from '../src/web/db/repo'
 import { applyImport } from '../src/lib/importService'
 import type { ImportPreview } from '../src/lib/parser'
 

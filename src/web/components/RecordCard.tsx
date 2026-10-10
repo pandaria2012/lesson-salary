@@ -1,5 +1,5 @@
-import { fmtHours, fmtMoney } from '../lib/format'
-import type { LessonRecord } from '../types'
+import { fmtHours, fmtMoney } from '../../core/format'
+import type { LessonRecord } from '../../core/types'
 
 export default function RecordCard({ record, onEdit, onToggleCancel, onDelete }: {
   record: LessonRecord

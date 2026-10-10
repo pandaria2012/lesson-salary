@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMinutes, computeHours, nextHalfHour, parseExcelDate, parseTimeRange } from '../src/lib/time'
+import { addMinutes, computeHours, nextHalfHour, parseExcelDate, parseTimeRange } from '../src/core/time'
 
 describe('parseExcelDate', () => {
   const now = new Date('2026-08-10T12:00:00+08:00')

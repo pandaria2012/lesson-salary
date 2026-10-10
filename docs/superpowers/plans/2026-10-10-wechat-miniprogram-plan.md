@@ -141,10 +141,23 @@ Expected: **无输出**（`src/core/` 此刻只含 6 个纯模块 + types，必�
 
 - [ ] **Step 4: 验证 web 端零回归**
 
-```bash
-npm test     # Expected: 14 files / 83 tests 全部 PASS
-npm run build # Expected: 退出码 0，生成 dist/
+```powershell
+npm test       # Expected: 14 files / 83 tests 全部 PASS
+npm run build  # Expected: 退出码 0，生成 dist/
 ```
+
+> ⚠️ **环境已知问题（非代码问题）**：本机 esbuild 无法在 `%TEMP%`（`E:\Users\91149\AppData\Local\Temp`）创建/删除文件，报 `Access is denied`，导致 `npm run build` 失败。
+> 该目录本身可写（手工建删文件正常），但 esbuild 的临时文件操作被拒。**与本次重构无关**（`tsc` 已通过）。
+> 绕过方式：把 TEMP 指到工作区内再构建。
+>
+> ```powershell
+> New-Item -ItemType Directory -Force .tmp-build | Out-Null
+> $env:TEMP = "$PWD\.tmp-build"; $env:TMP = "$PWD\.tmp-build"
+> npm run build
+> Remove-Item .tmp-build -Recurse -Force
+> ```
+>
+> 实测结果：**753.8 KB**，`index-*.js` 哈希 `index-B_O5EYC_.js`（703.8 KB）—— 与重构前基线 **754 KB / `index-B_O5EYC_.js` 完全相同**，证明零行为变更。
 
 - [ ] **Step 5: 提交**
 
@@ -1055,9 +1068,8 @@ grep -c "XLSX" miniprogram/core/index.js       # Expected: 0（主包不含 XLSX
 
 ### Task 20: 上架材料与清单
 
-- [ ] **Step 1: 处理待决项 T2 —— 小程序名称（仍未定）**
-  「课时记账本」已被占用（2026-10-10 实测），需改名。候选项按可用概率排序见 `docs/miniprogram-registration.md` §1，逐个提交试（提交时才实时校验，被拒不消耗任何东西）。
-  命名须同时避开「薪资/工资」（金融类目）与「老师/教师」（教育类目）。头像已生成于 `assets/miniprogram/`，介绍文案见同文件 §4。
+- [ ] **Step 1: T2 已解决 —— 名称「三尺课时账」**（简称「课时账」），头像与介绍已上传生效。
+  注册资料存档见 `docs/miniprogram-registration.md`。本步骤只需确认注册信息无误。
 - [ ] **Step 2:** ICP 备案（个人主体）
 - [ ] **Step 3:** 服务类目：工具 → 效率 / 工具 → 其他
 - [ ] **Step 4:** 隐私协议配置：声明数据仅存用户设备本地、不收集不上传、零网络请求
@@ -1084,6 +1096,6 @@ grep -c "XLSX" miniprogram/core/index.js       # Expected: 0（主包不含 XLSX
 | 编号 | 内容 | 处理位置 |
 |---|---|---|
 | T1 | SheetJS 升级到 0.20.x（CVE-2023-30533） | Task 15 Step 1 |
-| T2 | **小程序最终名称（仍未定）** —— 「课时记账本」已被占用 | Task 20 Step 1（候选见 `docs/miniprogram-registration.md`） |
+| T2 | ~~小程序最终名称~~ **已解决：「三尺课时账」** | Task 20 Step 1（资料见 `docs/miniprogram-registration.md`） |
 | T3 | `miniprogram/core/` 构建产物是否提交 git | Task 8 Step 1 |
 | — | `Repo` 是否增加 `clearAll()`（`overwrite` 恢复需要） | Task 6 Step 2 |

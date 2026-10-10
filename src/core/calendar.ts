@@ -1,4 +1,4 @@
-import type { LessonRecord } from '../types'
+import type { LessonRecord } from './types'
 
 export interface DayInfo {
   /** 正常课次数 */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DISMISS_KEY, detectPlatform, isGuideDismissed, markGuideDismissed, shouldAutoShow } from '../src/lib/installGuide'
+import { DISMISS_KEY, detectPlatform, isGuideDismissed, markGuideDismissed, shouldAutoShow } from '../src/web/lib/installGuide'
 
 function fakeStorage(init: Record<string, string> = {}): Pick<Storage, 'getItem' | 'setItem'> {
   const map = new Map(Object.entries(init))

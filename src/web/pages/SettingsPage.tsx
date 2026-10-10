@@ -3,9 +3,9 @@ import { usePin } from '../hooks/usePin'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { isStandalone } from '../lib/installGuide'
 import { listCourseTypes, listRecords } from '../db/repo'
-import { createExportAllWorkbook, openLastExport, parseBackupWorkbook, saveWorkbook } from '../lib/export'
-import { restoreBackup } from '../lib/restoreService'
-import type { CourseType, LessonRecord } from '../types'
+import { createExportAllWorkbook, openLastExport, parseBackupWorkbook, saveWorkbook } from '../../lib/export'
+import { restoreBackup } from '../../lib/restoreService'
+import type { CourseType, LessonRecord } from '../../core/types'
 
 type BackupData = { records: LessonRecord[]; courseTypes: CourseType[] }
 type MsgKind = 'ok' | 'error'

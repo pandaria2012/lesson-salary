@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { AppSettings, CourseType, ImportBatch, LessonRecord } from '../types'
+import type { AppSettings, CourseType, ImportBatch, LessonRecord } from '../../core/types'
 
 export class SalaryDB extends Dexie {
   courseTypes!: Table<CourseType, string>

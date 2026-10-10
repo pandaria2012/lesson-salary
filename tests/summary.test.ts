@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { summarize } from '../src/lib/summary'
-import type { LessonRecord } from '../src/types'
+import { summarize } from '../src/core/summary'
+import type { LessonRecord } from '../src/core/types'
 
 function rec(over: Partial<LessonRecord>): LessonRecord {
   return {

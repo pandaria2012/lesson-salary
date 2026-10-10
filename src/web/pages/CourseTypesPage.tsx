@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import CourseTypeFormSheet from '../components/CourseTypeFormSheet'
 import { useCourseTypes } from '../hooks/useCourseTypes'
-import type { CourseType } from '../types'
+import type { CourseType } from '../../core/types'
 
 export default function CourseTypesPage() {
   const { items, save, remove } = useCourseTypes()

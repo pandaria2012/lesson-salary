@@ -1,5 +1,5 @@
-import { db } from '../db/db'
-import { addBatch, listCourseTypes, saveCourseType, saveRecord } from '../db/repo'
+import { db } from '../web/db/db'
+import { addBatch, listCourseTypes, saveCourseType, saveRecord } from '../web/db/repo'
 import type { ImportPreview } from './parser'
 
 export async function applyImport(preview: ImportPreview): Promise<{ batchId: string; inserted: number }> {

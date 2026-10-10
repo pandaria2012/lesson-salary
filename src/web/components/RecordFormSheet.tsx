@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Sheet from './Sheet'
-import { addMinutes, computeHours, nextHalfHour } from '../lib/time'
-import { findDuplicateRecord } from '../lib/dedup'
-import type { CourseType, LessonRecord } from '../types'
+import { addMinutes, computeHours, nextHalfHour } from '../../core/time'
+import { findDuplicateRecord } from '../../core/dedup'
+import type { CourseType, LessonRecord } from '../../core/types'
 
 const QUICK_HOURS = [0.5, 1, 1.5, 2, 3]
 

@@ -1,5 +1,5 @@
-import type { ParsedRow } from '../lib/parser'
-import { fmtHours } from '../lib/format'
+import type { ParsedRow } from '../../lib/parser'
+import { fmtHours } from '../../core/format'
 
 export default function ImportPreview({ rows, onToggle }: { rows: ParsedRow[]; onToggle: (i: number) => void }) {
   const selectedCount = rows.filter(r => r.selected).length

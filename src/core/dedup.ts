@@ -1,4 +1,4 @@
-import type { LessonRecord } from '../types'
+import type { LessonRecord } from './types'
 
 /** 唯一键：课程类型 + 学生 + 日期 + 开始时间 + 结束时间 */
 export function duplicateKey(r: Pick<LessonRecord, 'courseTypeName' | 'student' | 'date' | 'startTime' | 'endTime'>): string {

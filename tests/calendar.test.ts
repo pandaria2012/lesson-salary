@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildDayMap, fmtDayLabel, monthGrid, todayStr } from '../src/lib/calendar'
-import type { LessonRecord } from '../src/types'
+import { buildDayMap, fmtDayLabel, monthGrid, todayStr } from '../src/core/calendar'
+import type { LessonRecord } from '../src/core/types'
 
 function rec(over: Partial<LessonRecord> = {}): LessonRecord {
   return {
