@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { describeRepoContract } from './helpers/repoContract'
 import { createWxRepo } from '../miniprogram/shared/repo'
+import { applyImport } from '../src/core/services/importService'
+import type { ImportPreview } from '../src/core/parser'
 import type { LessonRecord } from '../src/core/types'
 
 /**
@@ -106,4 +108,79 @@ describe('wx 存储层：分片与容量', () => {
 describeRepoContract('wxRepo (wx storage 模拟)', () => {
   installWxShim()
   return createWxRepo()
+})
+
+/**
+ * 端到端：core 的 importService 跑在小程序 Repo 上。
+ *
+ * 这一层是真正的生产路径（导入页 → applyImport → wx storage）。
+ * 契约测试只覆盖 Repo 单方法，这里验证"多方法组合 + 事务"的整体语义，
+ * 尤其是导入中途失败时不能留下半批数据。
+ */
+describe('wxRepo + applyImport 端到端', () => {
+  beforeEach(() => { installWxShim() })
+
+  const preview = (over: Partial<ImportPreview> = {}): ImportPreview => ({
+    fileName: '课程表.xlsx',
+    fileHash: 'hash-1',
+    sheetName: 'Sheet1',
+    columnMap: { courseTypeName: 0, rate: 1, student: 2, date: 3, time: 4 },
+    rows: [
+      {
+        rowNumber: 2, courseTypeName: '1对1', rate: 200, student: '张三',
+        date: '2026-08-11', startTime: '13:00', endTime: '15:00', hours: 2,
+        issues: [], isDuplicate: false, isSample: false, selected: true,
+        isNewCourseType: true, courseTypeId: null
+      },
+      {
+        rowNumber: 3, courseTypeName: '1对1', rate: 200, student: '李四',
+        date: '2026-08-12', startTime: '13:00', endTime: '15:00', hours: 2,
+        issues: [], isDuplicate: false, isSample: false, selected: true,
+        isNewCourseType: false, courseTypeId: null
+      }
+    ],
+    ...over
+  })
+
+  it('导入成功后记录、课程类型、批次全部落盘', async () => {
+    const repo = createWxRepo()
+    const res = await applyImport(preview(), repo)
+
+    expect(res.inserted).toBe(2)
+    const rows = await repo.listRecords('2026-08')
+    expect(rows).toHaveLength(2)
+    expect(rows.map(r => r.student).sort()).toEqual(['张三', '李四'])
+    expect(await repo.listCourseTypes()).toHaveLength(1)
+    expect((await repo.getBatchByHash('hash-1'))?.rowCount).toBe(2)
+  })
+
+  it('月分片正确落库，跨月导入各归其片', async () => {
+    const repo = createWxRepo()
+    await applyImport(preview({
+      rows: [
+        { rowNumber: 2, courseTypeName: '1对1', rate: 200, student: '张三', date: '2026-08-11', startTime: null, endTime: null, hours: 2, issues: [], isDuplicate: false, isSample: false, selected: true, isNewCourseType: true, courseTypeId: null },
+        { rowNumber: 3, courseTypeName: '1对1', rate: 200, student: '李四', date: '2026-09-02', startTime: null, endTime: null, hours: 2, issues: [], isDuplicate: false, isSample: false, selected: true, isNewCourseType: false, courseTypeId: null }
+      ]
+    }), repo)
+
+    expect(storage.has('ls:records:2026-08')).toBe(true)
+    expect(storage.has('ls:records:2026-09')).toBe(true)
+    expect(JSON.parse(storage.get('ls:records:index') as string)).toEqual(['2026-08', '2026-09'])
+  })
+
+  it('落盘失败时整批回滚，不留半批数据（事务原子性）', async () => {
+    const repo = createWxRepo()
+    // 先存一条基线数据
+    await repo.saveRecord(makeRec({ id: 'base', date: '2026-08-01' }))
+
+    simulateWriteFailure = true
+    await expect(applyImport(preview(), repo)).rejects.toThrow()
+
+    // 关键断言：失败后不应出现任何本次导入的痕迹
+    simulateWriteFailure = false
+    const rows = await repo.listRecords()
+    expect(rows.map(r => r.id)).toEqual(['base'])
+    expect(await repo.listCourseTypes()).toHaveLength(0)
+    expect(await repo.getBatchByHash('hash-1')).toBeUndefined()
+  })
 })

@@ -188,5 +188,9 @@ Page({
 
   onGoRecords() {
     wx.switchTab({ url: '/pages/records/index' })
+  },
+
+  onGoImport() {
+    wx.navigateTo({ url: '/packageImport/pages/import/index' })
   }
 })

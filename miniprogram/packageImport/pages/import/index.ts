@@ -3,7 +3,7 @@ import { applyImport, type ImportPreview, type ParsedRow } from '../../../core/i
 import {
   workbookToArrayBuffer, createImportTemplateWorkbook, parseWorkbook
 } from '../../core-workbook'
-import { repo } from '../../../shared/repo-singleton'
+import { repo, warnIfStorageFull } from '../../../shared/repo-singleton'
 import { chooseExcelFile, readFileAsArrayBuffer, saveAndPresent } from '../../../shared/file'
 import { confirmDanger, errMsg, hideLoading, showLoading, toast, toastOk } from '../../../shared/ui'
 
@@ -156,6 +156,8 @@ Page({
       this.setData({ lastBatchId: res.batchId, preview: null, rows: [], canImport: false })
       toastOk(`已导入 ${res.inserted} 条`)
       this.setMsg(`已导入 ${res.inserted} 条记录，可在记录页查看。`, 'ok')
+      // 导入是唯一会批量写入的入口，导入后检查一次存储余量（设计 §4.4）
+      warnIfStorageFull()
     } catch (err) {
       hideLoading()
       this.setMsg(`导入失败：${errMsg(err)}`, 'error')

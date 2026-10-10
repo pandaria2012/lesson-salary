@@ -78,7 +78,7 @@
     <text class="muted">本月还没有记录</text>
     <view class="btn-row" style="margin-top:12px">
       <view class="btn ghost" bindtap="onGoRecords">去补录</view>
-      <view class="btn" bindtap="onExportMonth">导入课程表</view>
+      <view class="btn" bindtap="onGoImport">导入课程表</view>
     </view>
   </view>
 
