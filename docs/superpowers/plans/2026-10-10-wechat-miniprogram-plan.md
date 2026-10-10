@@ -1055,9 +1055,9 @@ grep -c "XLSX" miniprogram/core/index.js       # Expected: 0（主包不含 XLSX
 
 ### Task 20: 上架材料与清单
 
-- [ ] **Step 1: T2 已解决 —— 小程序名称已确定为「课时记账本」**（简称「课时记账」）。
-  注册页 4 个字段（名称 / 简称 / 头像 / 介绍）的可照抄资料见 `docs/miniprogram-registration.md`；头像已生成于 `assets/miniprogram/`。
-  本步骤只需把该文件的文案填入微信公众平台并提交。
+- [ ] **Step 1: 处理待决项 T2 —— 小程序名称（仍未定）**
+  「课时记账本」已被占用（2026-10-10 实测），需改名。候选项按可用概率排序见 `docs/miniprogram-registration.md` §1，逐个提交试（提交时才实时校验，被拒不消耗任何东西）。
+  命名须同时避开「薪资/工资」（金融类目）与「老师/教师」（教育类目）。头像已生成于 `assets/miniprogram/`，介绍文案见同文件 §4。
 - [ ] **Step 2:** ICP 备案（个人主体）
 - [ ] **Step 3:** 服务类目：工具 → 效率 / 工具 → 其他
 - [ ] **Step 4:** 隐私协议配置：声明数据仅存用户设备本地、不收集不上传、零网络请求
@@ -1084,6 +1084,6 @@ grep -c "XLSX" miniprogram/core/index.js       # Expected: 0（主包不含 XLSX
 | 编号 | 内容 | 处理位置 |
 |---|---|---|
 | T1 | SheetJS 升级到 0.20.x（CVE-2023-30533） | Task 15 Step 1 |
-| T2 | ~~小程序最终名称~~ **已解决：「课时记账本」** | Task 20 Step 1（资料见 `docs/miniprogram-registration.md`） |
+| T2 | **小程序最终名称（仍未定）** —— 「课时记账本」已被占用 | Task 20 Step 1（候选见 `docs/miniprogram-registration.md`） |
 | T3 | `miniprogram/core/` 构建产物是否提交 git | Task 8 Step 1 |
 | — | `Repo` 是否增加 `clearAll()`（`overwrite` 恢复需要） | Task 6 Step 2 |
