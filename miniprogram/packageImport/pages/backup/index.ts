@@ -1,4 +1,4 @@
-import { restoreBackup } from '../../../core/index'
+import { fmtMonthRange, restoreBackup } from '../../../core/index'
 import {
   createExportAllWorkbook, parseBackupWorkbook, workbookToArrayBuffer
 } from '../../core-workbook'
@@ -59,10 +59,17 @@ Page({
       const wb = createExportAllWorkbook(records, courseTypes)
       const buf = workbookToArrayBuffer(wb)
       hideLoading()
-      // 固定文件名（不带时间戳）：被 openDocument 打开过的文件会持有文件锁无法删除，
-      // 若每次用新名字会只增不减直到占满配额。复用同名 → writeFile 直接覆盖。
-      // 备份的创建时间由文件内部的文档属性记录，并在恢复前展示。
-      const res = await saveAndPresent(buf, '课时备份.xlsx')
+      // 文件名描述**数据覆盖的月份范围**（首月月初 ~ 末月月末），而非导出时刻：
+      //   课时备份-2026-08-01_2026-08-31.xlsx   单月
+      //   课时备份-2026-08-01_2026-09-30.xlsx   跨月
+      // 好处：名字本身就是"装了什么"的说明；且同一批数据重复导出得到同一个名字，
+      // writeFile 覆盖同名文件 —— 不会像时间戳命名那样只增不减。
+      // （被 openDocument 打开过的文件会持有文件锁无法删除，见 shared/file.ts）
+      //
+      // 边界：只有课程类型、没有任何记录时，范围无意义 → 用「无记录」而非「空」，
+      // 避免出现"课时备份-空.xlsx"这种读起来像出错的文件名。
+      const range = records.length > 0 ? fmtMonthRange(records.map(r => r.date)) : '无记录'
+      const res = await saveAndPresent(buf, `课时备份-${range}.xlsx`)
 
       if (res === 'opened' || res === 'shared') {
         // 只有真正产出了文件才记录备份时间，避免"点了但没存"造成误判

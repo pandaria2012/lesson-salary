@@ -332,23 +332,33 @@ async function smoke(mp) {
     return `非法被拒 / 规范化 ${r.shard[0]} / 金额 ${r.amount}`
   })
 
-  // 导出文件不得累积。
+  // 导出文件命名与不累积。
+  // 命名约定：文件名描述**数据覆盖的月份范围**（首月月初 ~ 末月月末），
+  // 不是导出时刻 —— 这样同一批数据重复导出得到同一个名字，writeFile 覆盖，
+  // 不会像时间戳命名那样只增不减。
   // 背景（实测确认）：被 wx.openDocument 打开过的文件会持有**持久**文件锁，
-  // 之后 unlink 一律 EBUSY，应用运行期内删不掉。因此必须靠"复用固定文件名"
-  // 从源头避免产生垃圾，而不是事后清理。
-  await check('导出复用固定文件名（防 USER_DATA_PATH 堆积）', async () => {
-    // 预置一条数据，保证有内容可导出
+  // 之后 unlink 一律 EBUSY，应用运行期内删不掉；必须从源头不产生垃圾。
+  await check('导出文件名含月份范围 + 不累积（防 USER_DATA_PATH 堆积）', async () => {
+    // 预置数据：两条记录，都在 2026-08
     await mp.evaluate(() => {
       const C = require('core/index.js')
       const repo = require('shared/repo-singleton.js')
       return C.applyImport({
         fileName: 'smoke.xlsx', fileHash: 'smoke-h', sheetName: 'S', columnMap: {},
-        rows: [{
-          rowNumber: 2, courseTypeName: '冒烟', rate: 100, student: '张三',
-          date: '2026-08-10', startTime: '13:00', endTime: '15:00', hours: 2,
-          issues: [], isDuplicate: false, isSample: false, selected: true,
-          isNewCourseType: true, courseTypeId: null
-        }]
+        rows: [
+          {
+            rowNumber: 2, courseTypeName: '冒烟', rate: 100, student: '张三',
+            date: '2026-08-10', startTime: '13:00', endTime: '15:00', hours: 2,
+            issues: [], isDuplicate: false, isSample: false, selected: true,
+            isNewCourseType: true, courseTypeId: null
+          },
+          {
+            rowNumber: 3, courseTypeName: '冒烟', rate: 100, student: '李四',
+            date: '2026-08-12', startTime: '10:00', endTime: '11:00', hours: 1,
+            issues: [], isDuplicate: false, isSample: false, selected: true,
+            isNewCourseType: false, courseTypeId: null
+          }
+        ]
       }, repo.repo).then(r => r.inserted)
     })
 
@@ -359,11 +369,11 @@ async function smoke(mp) {
     const listOurs = () => mp.evaluate(() => {
       try {
         return wx.getFileSystemManager().readdirSync(wx.env.USER_DATA_PATH)
-          .filter(f => /^课时备份/.test(f) && !f.startsWith('~$')).length
-      } catch (e) { return -1 }
+          .filter(f => /^课时备份/.test(f) && !f.startsWith('~$'))
+      } catch (e) { return [] }
     })
 
-    const counts = []
+    const snapshots = []
     for (let i = 1; i <= 3; i++) {
       const btns = await page.$$('.btn')
       let tapped = false
@@ -372,15 +382,30 @@ async function smoke(mp) {
       }
       if (!tapped) throw new Error('未找到「导出备份文件」按钮')
       await new Promise(r => setTimeout(r, 2600))
-      counts.push(await listOurs())
+      snapshots.push(await listOurs())
     }
 
-    // 三次导出后文件数必须与第一次相同（同一固定名被覆盖）
+    const counts = snapshots.map(s => s.length)
+    const names = snapshots.map(s => s.filter(f => /^课时备份-2026-/.test(f)).length)
+
+    // 三次导出后本文件数必须恒定（同一名字被覆盖）
     if (counts[0] !== counts[1] || counts[1] !== counts[2]) {
       throw new Error(`导出文件在增长：${counts.join(' → ')}（应保持恒定）`)
     }
     if (counts[0] <= 0) throw new Error('未找到导出的备份文件')
-    return `${counts.join(' → ')} 恒定（复用 课时备份.xlsx）`
+
+    // 必须出现「含月份范围」的名字：课时备份-2026-08-01_2026-08-31.xlsx
+    const ranged = snapshots[2].find(f => /^课时备份-\d{4}-\d{2}-01_\d{4}-\d{2}-\d{2}\.xlsx$/.test(f))
+    if (!ranged) {
+      throw new Error(`未找到含月份范围的文件名，实际：${snapshots[2].join(', ')}`)
+    }
+    // 单月数据应覆盖整月：2026-08-01 ~ 2026-08-31
+    if (!/^课时备份-2026-08-01_2026-08-31\.xlsx$/.test(ranged)) {
+      throw new Error(`月份范围不符（应为 2026-08-01_2026-08-31）：${ranged}`)
+    }
+    if (names.length !== 3) throw new Error('三次导出未产生同名的范围文件')
+
+    return `${counts.join(' → ')} 恒定；文件名 ${ranged}`
   })
 
   // 清理冒烟数据

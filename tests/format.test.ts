@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fmtDate, fmtDateTime, fmtFileStamp, fmtHours, fmtMoney } from '../src/core/format'
+import { fmtDate, fmtDateTime, fmtFileStamp, fmtHours, fmtMoney, fmtMonthRange } from '../src/core/format'
 
 describe('format', () => {
   it('金额保留两位', () => {
@@ -66,5 +66,53 @@ describe('fmtFileStamp（文件名安全，精确到秒）', () => {
     const a = fmtFileStamp(new Date(2026, 7, 10, 9, 0, 0))
     const b = fmtFileStamp(new Date(2026, 7, 10, 9, 0, 1))
     expect(a).not.toBe(b)
+  })
+})
+
+describe('fmtMonthRange（备份文件名：数据覆盖的月份范围）', () => {
+  it('单月：月首到月末', () => {
+    expect(fmtMonthRange(['2026-08-10', '2026-08-11', '2026-08-16'])).toBe('2026-08-01_2026-08-31')
+  })
+
+  it('跨月：首月月初到末月月末', () => {
+    expect(fmtMonthRange(['2026-08-10', '2026-09-05'])).toBe('2026-08-01_2026-09-30')
+    expect(fmtMonthRange(['2026-01-31', '2026-03-01'])).toBe('2026-01-01_2026-03-31')
+  })
+
+  it('跨年', () => {
+    expect(fmtMonthRange(['2025-12-20', '2026-01-05'])).toBe('2025-12-01_2026-01-31')
+  })
+
+  it('忽略顺序，取真实最小/最大月份', () => {
+    expect(fmtMonthRange(['2026-09-01', '2026-07-15', '2026-08-20'])).toBe('2026-07-01_2026-09-30')
+  })
+
+  it('月末天数正确（含闰年 2 月）', () => {
+    expect(fmtMonthRange(['2026-02-10'])).toBe('2026-02-01_2026-02-28')
+    expect(fmtMonthRange(['2024-02-10'])).toBe('2024-02-01_2024-02-29')  // 闰年
+    expect(fmtMonthRange(['2026-04-10'])).toBe('2026-04-01_2026-04-30')  // 小月
+    expect(fmtMonthRange(['2026-12-10'])).toBe('2026-12-01_2026-12-31')
+  })
+
+  it('无记录返回「空」', () => {
+    expect(fmtMonthRange([])).toBe('空')
+    expect(fmtMonthRange([null, undefined, ''])).toBe('空')
+    expect(fmtMonthRange(['abc', '2026'])).toBe('空')
+  })
+
+  it('忽略异常日期，只用合法月份', () => {
+    expect(fmtMonthRange(['bad', '2026-08-10', null, '2026/9/1'])).toBe('2026-08-01_2026-08-31')
+  })
+
+  it('输出可安全用作文件名（无非法字符）', () => {
+    const s = fmtMonthRange(['2025-12-20', '2026-01-05'])
+    expect(s).not.toMatch(/[:/\\*?"<>|]/)
+    expect(s).toMatch(/^\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('同一批数据重复调用结果稳定（保证备份可覆盖、不堆积）', () => {
+    const a = fmtMonthRange(['2026-08-10', '2026-08-11'])
+    const b = fmtMonthRange(['2026-08-11', '2026-08-10'])
+    expect(a).toBe(b)
   })
 })

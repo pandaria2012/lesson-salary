@@ -51,18 +51,25 @@ function cleanupExports(keepFile: string): void {
 /**
  * 把 ArrayBuffer 写成 xlsx 临时文件，返回文件路径。
  *
- * ⚠️ 命名策略：**同一类导出复用固定文件名**（如 `课时备份.xlsx`），
- * 而不是每次带时间戳。
+ * ⚠️ 命名策略（由调用方决定，但必须**可重复**）：
+ * 名字要由**数据内容**决定，而不是导出时刻。当前约定：
+ *   课时备份-2026-08-01_2026-08-31.xlsx   备份（数据覆盖的月份范围）
+ *   课时月报-2026-10.xlsx                 月报（对应月份）
+ *   课时导入模板.xlsx                      模板（固定名）
  *
- * 原因：被 `openDocument` 打开过的文件会持有文件锁，之后无法删除（EBUSY）。
- * 若每次都用新名字，文件只增不减，最终占满 USER_DATA_PATH 配额 ——
- * 实测连续导出 3 次即累积 6 个文件（含 3 个 Office 锁文件）。
- * 复用固定名字时 `writeFile` 直接覆盖，不产生堆积；
- * 代价是"文件创建时间"不再体现在文件名上，但这已由备份文件内部的
- * 创建时间字段（workbook 文档属性）与界面显示覆盖。
+ * 原因：被 `openDocument` 打开过的文件会持有**持久**文件锁，之后 unlink
+ * 一律返回 `EBUSY`，应用运行期内删不掉（同步/异步、重启模拟器都无效，已实测）。
+ * 若名字里带导出时刻（时间戳），每次导出都是新文件，只能靠删除回收 ——
+ * 而删除又不生效，于是只增不减，最终占满 USER_DATA_PATH 配额。
+ * 实测：带时间戳连续导出 3 次累积 6 个文件；改用内容命名的固定规则后
+ * 连续导出 4 次，文件数恒定（相对基线新增 0 个）。
+ *
+ * 代价：文件名不再体现"导出时刻"。但备份的创建时间已记录在文件内部
+ * （workbook 文档属性），并在恢复前展示，信息并未丢失。
+ * 收益：同一批数据重复导出会覆盖同一个文件，天然不会堆积。
  */
 export function writeXlsxFile(buffer: ArrayBuffer, filename: string): Promise<string> {
-  // 先尽力清理历史遗留（含之前带时间戳的旧文件）
+  // 先尽力清理历史遗留（含早期带时间戳命名的旧文件）
   cleanupExports(filename)
   return new Promise((resolve, reject) => {
     const filePath = `${wx.env.USER_DATA_PATH}/${filename}`
