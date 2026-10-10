@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
 import ImportPreview from '../components/ImportPreview'
-import { deleteBatch, getBatchByHash, listCourseTypes, listRecords } from '../db/repo'
-import { applyImport } from '../../lib/importService'
-import { createImportTemplateWorkbook, openLastExport, saveWorkbook } from '../../lib/export'
-import { parseWorkbook, type ImportPreview as Preview } from '../../lib/parser'
+import { deleteBatch, getBatchByHash, listCourseTypes, listRecords, repo } from '../db/repo'
+import { applyImport } from '../../core/services/importService'
+import { createImportTemplateWorkbook, parseWorkbook } from '../../core/workbook'
+import { openLastExport, saveWorkbook } from '../../lib/export'
+import type { ImportPreview as Preview } from '../../core/parser'
 
 export default function ImportPage() {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -50,7 +51,7 @@ export default function ImportPage() {
     if (!preview) return
     setBusy(true)
     try {
-      const res = await applyImport(preview)
+      const res = await applyImport(preview, repo)
       setLastBatch(res.batchId)
       setMsg(`已导入 ${res.inserted} 条记录`)
       setPreview(null)

@@ -2,9 +2,10 @@ import { useRef, useState } from 'react'
 import { usePin } from '../hooks/usePin'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { isStandalone } from '../lib/installGuide'
-import { listCourseTypes, listRecords } from '../db/repo'
-import { createExportAllWorkbook, openLastExport, parseBackupWorkbook, saveWorkbook } from '../../lib/export'
-import { restoreBackup } from '../../lib/restoreService'
+import { listCourseTypes, listRecords, repo } from '../db/repo'
+import { createExportAllWorkbook, parseBackupWorkbook } from '../../core/workbook'
+import { openLastExport, saveWorkbook } from '../../lib/export'
+import { restoreBackup } from '../../core/services/restoreService'
 import type { CourseType, LessonRecord } from '../../core/types'
 
 type BackupData = { records: LessonRecord[]; courseTypes: CourseType[] }
@@ -73,7 +74,7 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
     if (!pendingBackup) return
     if (mode === 'overwrite' && !confirm('将清空全部现有数据且无法撤销，确定继续？')) return
     try {
-      const res = await restoreBackup(pendingBackup, mode)
+      const res = await restoreBackup(pendingBackup, mode, repo)
       setPendingBackup(null)
       showOk(`恢复完成：记录 ${res.records} 条，课程类型 ${res.courseTypes} 个（${mode === 'merge' ? '合并' : '覆盖'}）`)
     } catch (err) {

@@ -1,13 +1,16 @@
-import { db } from '../web/db/db'
-import { addBatch, listCourseTypes, saveCourseType, saveRecord } from '../web/db/repo'
-import type { ImportPreview } from './parser'
+import type { Repo } from '../repo'
+import type { ImportPreview } from '../parser'
 
-export async function applyImport(preview: ImportPreview): Promise<{ batchId: string; inserted: number }> {
-  const existingTypes = await listCourseTypes()
+/** 预览确认后写库（含新建课程类型与批次记录）。 */
+export async function applyImport(
+  preview: ImportPreview,
+  repo: Repo
+): Promise<{ batchId: string; inserted: number }> {
+  const existingTypes = await repo.listCourseTypes()
   const batchId = `b-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const inserted = preview.rows.filter(r => r.selected).length
 
-  await db.transaction('rw', [db.records, db.courseTypes, db.batches], async () => {
+  await repo.transaction(async () => {
     for (const row of preview.rows) {
       if (!row.selected) continue
       if (row.isNewCourseType && row.courseTypeName) {
@@ -22,12 +25,12 @@ export async function applyImport(preview: ImportPreview): Promise<{ batchId: st
             defaultRate: row.rate,
             createdAt: new Date().toISOString()
           }
-          await saveCourseType(ct)
+          await repo.saveCourseType(ct)
           existingTypes.push(ct)
         }
       }
       const ct = existingTypes.find(t => t.name === row.courseTypeName)
-      await saveRecord({
+      await repo.saveRecord({
         id: `r-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${row.rowNumber}`,
         courseTypeId: ct?.id ?? null,
         courseTypeName: row.courseTypeName,
@@ -46,7 +49,13 @@ export async function applyImport(preview: ImportPreview): Promise<{ batchId: st
       })
     }
 
-    await addBatch({ id: batchId, filename: preview.fileName, fileHash: preview.fileHash, importedAt: new Date().toISOString(), rowCount: inserted })
+    await repo.addBatch({
+      id: batchId,
+      filename: preview.fileName,
+      fileHash: preview.fileHash,
+      importedAt: new Date().toISOString(),
+      rowCount: inserted
+    })
   })
 
   return { batchId, inserted }

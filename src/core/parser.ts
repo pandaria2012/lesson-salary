@@ -1,6 +1,13 @@
-import * as XLSX from 'xlsx'
-import type { CourseType, LessonRecord } from '../core/types'
-import { computeHours, parseExcelDate, parseTimeRange } from '../core/time'
+import type { CourseType, LessonRecord } from './types'
+import { computeHours, parseExcelDate, parseTimeRange } from './time'
+
+/**
+ * Excel 行解析（纯函数，零平台依赖、零 XLSX 依赖）。
+ *
+ * 与 `workbook.ts` 分离的原因：workbook 依赖 SheetJS（压缩后 424 KB），
+ * 而小程序主包上限 2 MB，因此 SheetJS 必须留在分包。
+ * 主包只需要本文件的"行解析"能力。
+ */
 
 const ALIASES: Record<'courseTypeName' | 'rate' | 'student' | 'date' | 'time', string[]> = {
   courseTypeName: ['课程类型', '课程', '科目', '类型'],
@@ -147,33 +154,4 @@ export interface ImportPreview {
   sheetName: string
   columnMap: Partial<Record<ColumnKey, number | null>>
   rows: ParsedRow[]
-}
-
-export async function parseWorkbook(
-  buffer: ArrayBuffer,
-  fileName: string,
-  existing: { courseTypes: CourseType[]; records: LessonRecord[] }
-): Promise<ImportPreview> {
-  const wb = XLSX.read(buffer, { type: 'array', cellDates: true })
-  let sheetName = wb.SheetNames[0]
-  let best: unknown[][] = []
-  for (const name of wb.SheetNames) {
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[name], { header: 1, defval: '' })
-    const headers = (rows[0] ?? []).map(h => String(h ?? '').trim())
-    const col = detectColumns(headers)
-    const hasHeader = col.courseTypeName !== null || col.student !== null || col.date !== null
-    if (hasHeader && rows.length > best.length) {
-      best = rows
-      sheetName = name
-    }
-  }
-  const hashBuf = await crypto.subtle.digest('SHA-256', buffer)
-  const fileHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
-  return {
-    fileName,
-    fileHash,
-    sheetName,
-    columnMap: detectColumns((best[0] ?? []).map(h => String(h ?? ''))),
-    rows: buildPreviewFromRows(best, existing)
-  }
 }

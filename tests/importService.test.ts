@@ -1,11 +1,12 @@
-import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/web/db/db'
-import { getBatchByHash, listCourseTypes, listRecords } from '../src/web/db/repo'
-import { applyImport } from '../src/lib/importService'
-import type { ImportPreview } from '../src/lib/parser'
+import { createMemoryRepo } from '../src/core/memoryRepo'
+import { applyImport } from '../src/core/services/importService'
+import type { Repo } from '../src/core/repo'
+import type { ImportPreview } from '../src/core/parser'
 
-beforeEach(async () => { await db.delete(); await db.open() })
+// 注入内存实现：core 层的 service 已脱离 IndexedDB，两端都能跑
+let repo: Repo
+beforeEach(() => { repo = createMemoryRepo() })
 
 const preview: ImportPreview = {
   fileName: '课程表.xlsx',
@@ -30,14 +31,14 @@ const preview: ImportPreview = {
 
 describe('applyImport', () => {
   it('只导入勾选行，自动创建课程类型与批次', async () => {
-    const { batchId, inserted } = await applyImport(preview)
+    const { batchId, inserted } = await applyImport(preview, repo)
     expect(inserted).toBe(1)
     expect(batchId).toBeTruthy()
-    expect((await getBatchByHash('abc123'))?.rowCount).toBe(1)
-    const types = await listCourseTypes()
+    expect((await repo.getBatchByHash('abc123'))?.rowCount).toBe(1)
+    const types = await repo.listCourseTypes()
     expect(types).toHaveLength(1)
     expect(types[0]).toMatchObject({ name: '1对1', defaultHours: 2, defaultRate: 200 })
-    const recs = await listRecords('2026-08')
+    const recs = await repo.listRecords('2026-08')
     expect(recs).toHaveLength(1)
     expect(recs[0]).toMatchObject({ student: '张三', status: 'normal', source: 'import', batchId })
   })

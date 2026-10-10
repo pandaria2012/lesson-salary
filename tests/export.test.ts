@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
-import { createExportAllWorkbook, createImportTemplateWorkbook, createMonthlyWorkbook, parseBackupWorkbook } from '../src/lib/export'
+import { createExportAllWorkbook, createImportTemplateWorkbook, createMonthlyWorkbook, parseBackupWorkbook } from '../src/core/workbook'
 import type { CourseType, LessonRecord } from '../src/core/types'
 
 function sheetRows(wb: XLSX.WorkBook, name: string): unknown[][] {

@@ -1,4 +1,4 @@
-import type { ParsedRow } from '../../lib/parser'
+import type { ParsedRow } from '../../core/parser'
 import { fmtHours } from '../../core/format'
 
 export default function ImportPreview({ rows, onToggle }: { rows: ParsedRow[]; onToggle: (i: number) => void }) {

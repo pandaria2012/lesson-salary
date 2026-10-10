@@ -1,11 +1,11 @@
-import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../src/web/db/db'
-import { listCourseTypes, listRecords } from '../src/web/db/repo'
-import { restoreBackup } from '../src/lib/restoreService'
+import { createMemoryRepo } from '../src/core/memoryRepo'
+import { restoreBackup } from '../src/core/services/restoreService'
+import type { Repo } from '../src/core/repo'
 import type { CourseType, LessonRecord } from '../src/core/types'
 
-beforeEach(async () => { await db.delete(); await db.open() })
+let repo: Repo
+beforeEach(() => { repo = createMemoryRepo() })
 
 const ct: CourseType = { id: 'ct1', name: '1对1', type: '一对一', status: 'enabled', defaultHours: 2, defaultRate: 200, createdAt: 't' }
 const rec: LessonRecord = {
@@ -16,17 +16,25 @@ const rec: LessonRecord = {
 
 describe('restoreBackup', () => {
   it('merge：缺课时用默认课时补齐，重复 id 跳过', async () => {
-    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge')
-    const recs = await listRecords()
+    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge', repo)
+    const recs = await repo.listRecords()
     expect(recs).toHaveLength(1)
     expect(recs[0].hours).toBe(2)
-    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge')
-    expect(await listRecords()).toHaveLength(1)
+    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge', repo)
+    expect(await repo.listRecords()).toHaveLength(1)
   })
+
   it('overwrite：先清空再导入', async () => {
-    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge')
-    await restoreBackup({ records: [], courseTypes: [] }, 'overwrite')
-    expect(await listRecords()).toHaveLength(0)
-    expect(await listCourseTypes()).toHaveLength(0)
+    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge', repo)
+    await restoreBackup({ records: [], courseTypes: [] }, 'overwrite', repo)
+    expect(await repo.listRecords()).toHaveLength(0)
+    expect(await repo.listCourseTypes()).toHaveLength(0)
+  })
+
+  it('overwrite 后恢复的数据量正确（clearAll 生效）', async () => {
+    await restoreBackup({ records: [rec], courseTypes: [ct] }, 'merge', repo)
+    const res = await restoreBackup({ records: [rec], courseTypes: [ct] }, 'overwrite', repo)
+    expect(res.records).toBe(1)
+    expect(await repo.listRecords()).toHaveLength(1)
   })
 })
