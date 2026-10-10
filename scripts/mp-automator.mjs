@@ -332,6 +332,57 @@ async function smoke(mp) {
     return `非法被拒 / 规范化 ${r.shard[0]} / 金额 ${r.amount}`
   })
 
+  // 导出文件不得累积。
+  // 背景（实测确认）：被 wx.openDocument 打开过的文件会持有**持久**文件锁，
+  // 之后 unlink 一律 EBUSY，应用运行期内删不掉。因此必须靠"复用固定文件名"
+  // 从源头避免产生垃圾，而不是事后清理。
+  await check('导出复用固定文件名（防 USER_DATA_PATH 堆积）', async () => {
+    // 预置一条数据，保证有内容可导出
+    await mp.evaluate(() => {
+      const C = require('core/index.js')
+      const repo = require('shared/repo-singleton.js')
+      return C.applyImport({
+        fileName: 'smoke.xlsx', fileHash: 'smoke-h', sheetName: 'S', columnMap: {},
+        rows: [{
+          rowNumber: 2, courseTypeName: '冒烟', rate: 100, student: '张三',
+          date: '2026-08-10', startTime: '13:00', endTime: '15:00', hours: 2,
+          issues: [], isDuplicate: false, isSample: false, selected: true,
+          isNewCourseType: true, courseTypeId: null
+        }]
+      }, repo.repo).then(r => r.inserted)
+    })
+
+    await mp.navigateTo('/packageImport/pages/backup/index')
+    await new Promise(r => setTimeout(r, 1200))
+    const page = await mp.currentPage()
+
+    const listOurs = () => mp.evaluate(() => {
+      try {
+        return wx.getFileSystemManager().readdirSync(wx.env.USER_DATA_PATH)
+          .filter(f => /^课时备份/.test(f) && !f.startsWith('~$')).length
+      } catch (e) { return -1 }
+    })
+
+    const counts = []
+    for (let i = 1; i <= 3; i++) {
+      const btns = await page.$$('.btn')
+      let tapped = false
+      for (const b of btns) {
+        if ((await b.text()).includes('导出备份文件')) { await b.tap(); tapped = true; break }
+      }
+      if (!tapped) throw new Error('未找到「导出备份文件」按钮')
+      await new Promise(r => setTimeout(r, 2600))
+      counts.push(await listOurs())
+    }
+
+    // 三次导出后文件数必须与第一次相同（同一固定名被覆盖）
+    if (counts[0] !== counts[1] || counts[1] !== counts[2]) {
+      throw new Error(`导出文件在增长：${counts.join(' → ')}（应保持恒定）`)
+    }
+    if (counts[0] <= 0) throw new Error('未找到导出的备份文件')
+    return `${counts.join(' → ')} 恒定（复用 课时备份.xlsx）`
+  })
+
   // 清理冒烟数据
   await check('清理冒烟数据', async () => {
     await mp.evaluate(() => {

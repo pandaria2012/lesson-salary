@@ -1,4 +1,4 @@
-import { fmtFileStamp, restoreBackup } from '../../../core/index'
+import { restoreBackup } from '../../../core/index'
 import {
   createExportAllWorkbook, parseBackupWorkbook, workbookToArrayBuffer
 } from '../../core-workbook'
@@ -58,11 +58,11 @@ Page({
       const [records, courseTypes] = await Promise.all([repo.listRecords(), repo.listCourseTypes()])
       const wb = createExportAllWorkbook(records, courseTypes)
       const buf = workbookToArrayBuffer(wb)
-      // 文件名用「本地时间、精确到秒」：避免 UTC 跨日错位，也避免同日多次备份互相覆盖。
-      // 不用冒号（文件名非法字符），故用 fmtFileStamp 的 YYYY-MM-DD_HHmmss。
-      const stamp = fmtFileStamp(new Date())
       hideLoading()
-      const res = await saveAndPresent(buf, `课时备份-${stamp}.xlsx`)
+      // 固定文件名（不带时间戳）：被 openDocument 打开过的文件会持有文件锁无法删除，
+      // 若每次用新名字会只增不减直到占满配额。复用同名 → writeFile 直接覆盖。
+      // 备份的创建时间由文件内部的文档属性记录，并在恢复前展示。
+      const res = await saveAndPresent(buf, '课时备份.xlsx')
 
       if (res === 'opened' || res === 'shared') {
         // 只有真正产出了文件才记录备份时间，避免"点了但没存"造成误判
