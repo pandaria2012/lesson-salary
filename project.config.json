@@ -1,0 +1,36 @@
+{
+  "description": "三尺课时账。小程序代码在 miniprogram/ 子目录，core 层复用了 src/core（见 scripts/build-core.mjs）。",
+  "miniprogramRoot": "miniprogram/",
+  "projectname": "lesson-salary",
+  "compileType": "miniprogram",
+  "appid": "wx16e4fa5e02423eca",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": ["typescript"],
+    "urlCheck": false,
+    "autoAudits": false,
+    "checkInvalidKey": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "preloadBackgroundData": false,
+    "compileHotReLoad": true,
+    "skylineRenderEnable": false,
+    "showShadowRootInWxmlPanel": true
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
+}

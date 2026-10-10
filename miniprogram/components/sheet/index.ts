@@ -1,7 +1,7 @@
 Component({
   options: {
-    multipleSlots: false,
-    // 允许外部样式类，便于页面微调
+    // slot 内容来自页面（表单字段等），需要全局样式共享，
+    // 否则 app.wxss 里的 .field / .input / .btn 在组件内不生效。
     addGlobalClass: true
   },
 

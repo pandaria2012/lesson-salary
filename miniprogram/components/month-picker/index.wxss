@@ -1,0 +1,47 @@
+/* 月份选择器。
+ *
+ * 这里需要重复一份布局样式：
+ * 虽然组件已开 addGlobalClass 共享 app.wxss，但把**组件自身结构**的样式
+ * 留在组件内更稳妥（组件可独立复用，不依赖宿主页面的全局样式）。
+ * 只保留结构性声明，颜色等仍走 app.wxss 的 CSS 变量。
+ */
+.month-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+/* picker 是块级组件，必须显式 flex，否则内部 label 会另起一行 */
+.month-picker picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.month-picker .nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  background: var(--card, #fff);
+  color: var(--text, #1a1a1a);
+  border: 1px solid var(--border, #e3e6ea);
+  font-size: 18px;
+}
+
+.month-picker .month-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  min-height: 44px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text, #1a1a1a);
+}

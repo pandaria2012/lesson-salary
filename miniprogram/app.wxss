@@ -114,6 +114,13 @@ view, text, button, input, textarea, picker { box-sizing: border-box; }
 
 /* 月份选择器 */
 .month-picker { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0 16px; }
+/* ⚠️ picker 是块级组件，不设 display:flex 会让 .month-label 掉到按钮下方（换行） */
+.month-picker picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
 .month-picker .nav-btn {
   background: var(--card);
   color: var(--text);
@@ -128,6 +135,10 @@ view, text, button, input, textarea, picker { box-sizing: border-box; }
 }
 .month-picker .month-label {
   min-width: 120px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 16px;
   font-weight: 600;
@@ -185,7 +196,9 @@ view, text, button, input, textarea, picker { box-sizing: border-box; }
 .toolbar .chip.active { border-color: var(--primary); color: var(--primary); font-weight: 600; }
 
 .filters { display: flex; gap: 6px; margin: 0 0 10px; }
-.filters .filter-item { flex: 1 1 0; min-width: 0; }
+/* picker 是块级组件；作为 flex 子项需显式声明，否则宽度分配不生效 */
+.filters .filter-item { flex: 1 1 0; min-width: 0; display: block; }
+.filters picker { display: block; }
 .filters .filter-value {
   min-height: 36px;
   line-height: 34px;
