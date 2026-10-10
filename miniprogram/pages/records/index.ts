@@ -105,11 +105,9 @@ Page({
     busy: false
   },
 
-  onLoad() {
-    void this.reload()
-  },
-
   onShow() {
+    // tab 页每次显示都会触发（含首次进入，晚于 onLoad），
+    // 因此数据加载只放在这里，避免首次进入读两遍。
     void this.reload()
   },
 

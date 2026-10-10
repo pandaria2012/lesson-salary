@@ -3,6 +3,7 @@ import {
   type DayInfo, type GroupStats, type LessonRecord
 } from '../../core/index'
 import { repo } from '../../shared/repo-singleton'
+import { maybeShowBackupReminder } from '../../shared/backupReminder'
 import { errMsg } from '../../shared/ui'
 import { currentMonth } from '../../shared/month'
 
@@ -48,12 +49,14 @@ Page({
     hasAnyRecord: false
   },
 
-  onLoad() {
-    void this.reload()
+  onReady() {
+    // 此时页面栈已就绪，可安全弹窗/跳转（见 shared/backupReminder.ts 说明）
+    void maybeShowBackupReminder()
   },
 
   onShow() {
-    // 从记录页/导入页返回时需要刷新
+    // tab 页每次显示都会触发（含首次进入，晚于 onLoad），
+    // 因此数据加载只放在这里，避免首次进入读两遍。
     void this.reload()
   },
 
