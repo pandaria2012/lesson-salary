@@ -1,37 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
+import { addCourseType, addRecord, dayLabel, dayOfCurrentMonth, preparePage } from './helpers'
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ls.installGuideDismissed', '1'))
+  await preparePage(page)
 })
-
-async function addCourseType(page: Page) {
-  await page.getByRole('button', { name: '课程', exact: true }).click()
-  await page.getByRole('button', { name: '新增', exact: true }).click()
-  await page.locator('.sheet input[placeholder*="初三数学"]').fill('数学1对1')
-  await page.locator('.sheet input[list="teaching-forms"]').fill('一对一')
-  await page.locator('.sheet input[inputmode="decimal"]').nth(0).fill('2')
-  await page.locator('.sheet input[inputmode="decimal"]').nth(1).fill('200')
-  await page.getByRole('button', { name: '保存', exact: true }).click()
-  await expect(page.getByText('数学1对1', { exact: true })).toBeVisible()
-}
-
-async function addRecord(page: Page, student: string, date: string, start: string, end: string) {
-  await page.getByRole('button', { name: '记录', exact: true }).click()
-  await page.getByRole('button', { name: /补录/ }).click()
-  await page.locator('.sheet select').nth(0).selectOption({ label: '数学1对1' })
-  await page.locator('.sheet input[placeholder*="张三"]').fill(student)
-  await page.locator('.sheet input[type="date"]').fill(date)
-  await page.locator('.sheet input[type="time"]').nth(0).fill(start)
-  await page.locator('.sheet input[type="time"]').nth(1).fill(end)
-  await page.locator('.sheet input[inputmode="decimal"]').fill('200')
-  await page.getByRole('button', { name: '保存', exact: true }).click()
-}
 
 test('记录页筛选：按学生/状态过滤与清除', async ({ page }) => {
   await page.goto('/')
   await addCourseType(page)
-  await addRecord(page, '张三', '2026-08-10', '13:00', '15:00')
-  await addRecord(page, '李四', '2026-08-12', '10:00', '11:00')
+  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: dayOfCurrentMonth(10), start: '13:00', end: '15:00', rate: '200' })
+  await addRecord(page, { courseLabel: '数学1对1', student: '李四', date: dayOfCurrentMonth(12), start: '10:00', end: '11:00', rate: '200' })
 
   // 默认两条都在
   await expect(page.locator('.record', { hasText: '张三' })).toBeVisible()
@@ -62,12 +40,12 @@ test('记录页筛选：按学生/状态过滤与清除', async ({ page }) => {
 test('记录列表按天/课程/学生分组', async ({ page }) => {
   await page.goto('/')
   await addCourseType(page)
-  await addRecord(page, '张三', '2026-08-10', '13:00', '15:00')
-  await addRecord(page, '李四', '2026-08-12', '10:00', '11:00')
+  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: dayOfCurrentMonth(10), start: '13:00', end: '15:00', rate: '200' })
+  await addRecord(page, { courseLabel: '数学1对1', student: '李四', date: dayOfCurrentMonth(12), start: '10:00', end: '11:00', rate: '200' })
 
   // 默认按天分组
-  await expect(page.locator('.group-head', { hasText: '8月10日' })).toBeVisible()
-  await expect(page.locator('.group-head', { hasText: '8月12日' })).toBeVisible()
+  await expect(page.locator('.group-head', { hasText: dayLabel(10) })).toBeVisible()
+  await expect(page.locator('.group-head', { hasText: dayLabel(12) })).toBeVisible()
 
   // 按课程分组
   await page.getByRole('button', { name: '按课程', exact: true }).click()

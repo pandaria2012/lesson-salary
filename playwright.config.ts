@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
+  // 只收集 *.spec.ts，避免把 e2e/helpers.ts 当成测试文件
+  testMatch: '**/*.spec.ts',
   timeout: 90_000,
   fullyParallel: false,
   workers: 1,

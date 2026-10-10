@@ -1,43 +1,11 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import * as XLSX from 'xlsx'
+import { addCourseType, addRecord, dayOfCurrentMonth, preparePage, showList } from './helpers'
 
 // 默认跳过“添加到桌面”引导，避免遮挡页面（引导流程有独立用例）
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('ls.installGuideDismissed', '1'))
-  // 测试环境禁用系统分享/保存对话框，强制走浏览器下载兜底
-  await page.addInitScript(() => {
-    try { Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true }) } catch { /* ignore */ }
-    try { Object.defineProperty(Navigator.prototype, 'share', { value: undefined, configurable: true }) } catch { /* ignore */ }
-    try { Object.defineProperty(Navigator.prototype, 'canShare', { value: undefined, configurable: true }) } catch { /* ignore */ }
-  })
+  await preparePage(page)
 })
-
-async function addCourseType(page: Page, name = '数学1对1', hours = '2', rate = '200') {
-  await page.getByRole('button', { name: '课程', exact: true }).click()
-  await page.getByRole('button', { name: '新增', exact: true }).click()
-  await page.locator('.sheet input[placeholder*="初三数学"]').fill(name)
-  await page.locator('.sheet input[list="teaching-forms"]').fill('一对一')
-  await page.locator('.sheet input[inputmode="decimal"]').nth(0).fill(hours)
-  await page.locator('.sheet input[inputmode="decimal"]').nth(1).fill(rate)
-  await page.getByRole('button', { name: '保存', exact: true }).click()
-  await expect(page.getByText(name, { exact: true })).toBeVisible()
-}
-
-async function addRecord(page: Page, opts: { courseLabel: string; student: string; date: string; start: string; end: string; rate: string }) {
-  await page.getByRole('button', { name: '记录', exact: true }).click()
-  await page.getByRole('button', { name: /补录/ }).click()
-  await page.locator('.sheet select').nth(0).selectOption({ label: opts.courseLabel })
-  await page.locator('.sheet input[placeholder*="张三"]').fill(opts.student)
-  await page.locator('.sheet input[type="date"]').fill(opts.date)
-  await page.locator('.sheet input[type="time"]').nth(0).fill(opts.start)
-  await page.locator('.sheet input[type="time"]').nth(1).fill(opts.end)
-  await page.locator('.sheet input[inputmode="decimal"]').fill(opts.rate)
-  await page.getByRole('button', { name: '保存', exact: true }).click()
-}
-
-async function showList(page: Page) {
-  await page.getByRole('button', { name: '列表', exact: true }).click()
-}
 
 test('课程类型：新增/编辑/删除', async ({ page }) => {
   await page.goto('/')
@@ -60,12 +28,13 @@ test('课程类型：新增/编辑/删除', async ({ page }) => {
 })
 
 test('补录记录 → 月度汇总金额正确 → 导出月报', async ({ page }) => {
+  const date = dayOfCurrentMonth(10)
   await page.goto('/')
   await addCourseType(page)
 
-  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: '2026-08-10', start: '13:00', end: '15:00', rate: '200' })
+  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date, start: '13:00', end: '15:00', rate: '200' })
   await showList(page)
-  await expect(page.getByText('2026-08-10')).toBeVisible()
+  await expect(page.getByText(date)).toBeVisible()
   await expect(page.getByText('¥400.00', { exact: true })).toBeVisible()
 
   // 汇总
@@ -90,8 +59,8 @@ test('Excel 导入（预览/确认/撤销）', async ({ page }) => {
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ['课程类型', '课程单价', '学生名称', '上课日期', '上课时间'],
-    ['英语小班', 150, '李四', '2026-08-12', '18:30-20:30'],
-    ['示例学生', 100, '示例学生', '2026-08-13', '09:00-10:00']
+    ['英语小班', 150, '李四', dayOfCurrentMonth(12), '18:30-20:30'],
+    ['示例学生', 100, '示例学生', dayOfCurrentMonth(13), '09:00-10:00']
   ]), '课程表')
   const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer
   await page.locator('input[type="file"]').setInputFiles({
@@ -132,7 +101,7 @@ test('PIN 锁：开启/锁定/错误提示/解锁/忘记重置', async ({ page }
 
   // 先造一条数据
   await addCourseType(page, '数学1对1', '2', '200')
-  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: '2026-08-10', start: '13:00', end: '15:00', rate: '200' })
+  await addRecord(page, { courseLabel: '数学1对1', student: '张三', date: dayOfCurrentMonth(10), start: '13:00', end: '15:00', rate: '200' })
 
   // 刷新后锁定
   await page.reload()
