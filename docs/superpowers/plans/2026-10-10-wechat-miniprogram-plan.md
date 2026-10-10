@@ -974,16 +974,16 @@ export function usedBytes(): number {
 - Create: `miniprogram/packageImport/pages/{import,export,backup}/index.*`
 - Verify: `miniprogram/packageImport/core-workbook.js`（Task 8 产物）
 
-- [ ] **Step 1: 处理待决项 T1 —— SheetJS 升级**
+- [ ] **Step 1: T1 已解决 —— SheetJS 已升级到 0.20.3**
 
-**T1：`xlsx@0.18.5` 含 `CVE-2023-30533`（原型污染，0.19.3 修复）。** SheetJS 自 0.18.5 起不再发布 npm，改由官方 CDN 分发。**上架应用不应带已知 CVE**，计划采用从官方 CDN 安装 0.20.x：
+原 `xlsx@0.18.5` 含 `CVE-2023-30533`（原型污染，0.19.3 修复）。已从官方 CDN 安装：
 
 ```bash
 npm i https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
 ```
 
-验收：`npm test` 全绿（`tests/parser.test.ts`、`tests/export.test.ts` 覆盖读写路径）+ `npm run build` 成功 + `npm run build:core` 产物体积重新记录。
-**若升级导致测试失败且短期无法解决**：记录问题并暂留 0.18.5，但必须在设计 §11 R1 中升级为"已知风险未解决"，不得静默放过。
+验收结果：132 个测试全绿；`npm run build`（web）与 `npm run build:core`（小程序）均成功；
+分包产物读写含中文 xlsx、SHA-256 指纹、备份往返全部验证正确；cpexcel 剔除与 Node 内置模块 stub 在 0.20.3 上依然生效。
 
 - [ ] **Step 2: 追加分包配置**
 
@@ -1095,7 +1095,7 @@ grep -c "XLSX" miniprogram/core/index.js       # Expected: 0（主包不含 XLSX
 
 | 编号 | 内容 | 处理位置 |
 |---|---|---|
-| T1 | SheetJS 升级到 0.20.x（CVE-2023-30533） | Task 15 Step 1 |
+| T1 | ~~SheetJS 升级到 0.20.x（CVE-2023-30533）~~ **已解决：已升级 0.20.3** | Task 15 Step 1 |
 | T2 | ~~小程序最终名称~~ **已解决：「三尺课时账」** | Task 20 Step 1（资料见 `docs/miniprogram-registration.md`） |
 | T3 | `miniprogram/core/` 构建产物是否提交 git | Task 8 Step 1 |
 | — | `Repo` 是否增加 `clearAll()`（`overwrite` 恢复需要） | Task 6 Step 2 |

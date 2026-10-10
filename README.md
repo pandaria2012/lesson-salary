@@ -84,13 +84,19 @@ SheetJS 压缩后约 424 KB，为避免拖累主包（上限 2 MB），Excel 相
 | 包 | 内容 | 实测体积 |
 |---|---|---|
 | 主包 | 4 个 tab 页 + core（不含 XLSX） | ~20 KB |
-| 分包 `packageImport` | 导入 / 导出月报 / 备份恢复 + SheetJS | ~437 KB |
+| 分包 `packageImport` | 导入 / 导出月报 / 备份恢复 + SheetJS 0.20.3 | ~498 KB |
 
 `scripts/build-core.mjs` 会**在构建期断言主包产物不含 SheetJS**，防止误引入。
 
+SheetJS 使用官方 CDN 的 **0.20.3**（npm 上的 0.18.5 含 `CVE-2023-30533` 原型污染，0.19.3 才修复）：
+
+```bash
+npm i https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+```
+
 构建脚本还剔除了 `xlsx` 的 `dist/cpexcel.js`（793 KB，旧版 `.xls` 多语言码表）。
 安全依据：本应用只处理 `.xlsx`（UTF-8 + XML）；SheetJS 官方同样提供不含 cpexcel 的 `xlsx.core.min.js`。
-已实测验证：读写含中文 `.xlsx`、SHA-256 指纹、备份往返全部正确。
+已实测验证：读写含中文 `.xlsx`、SHA-256 指纹、备份往返全部正确（0.18.5 与 0.20.3 均验证）。
 
 ### 数据存储
 
