@@ -70,8 +70,9 @@ npm run build:core   # 把 src/core 编译到 miniprogram/（产物不入库，�
 ```bash
 npm run build:core   # 改过 src/core 后必须重新构建
 npm run check:core   # 校验产物是否与 src/core 同步（防忘记重建）
-npm run check:mp     # 校验小程序结构：页面四件套、tabBar 图标、WXML 事件绑定
-npm run verify       # 全量：check:core + check:mp + 测试 + 两端类型检查
+npm run check:mp     # 校验小程序结构、WXML 事件绑定、页面跳转目标
+npm run verify       # 全量静态验证：check:core + check:mp + 132 测试 + 两端类型检查
+npm run verify:all   # 再叠加 Playwright e2e（14 用例；会构建并起预览服务）
 ```
 
 > **改了 `src/core` 却忘记 `build:core`** 是最容易犯的错：小程序会静默运行旧逻辑。
@@ -120,9 +121,17 @@ npm i https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
 
 小程序页面层**没有可用的自动化测试方案**，因此全部业务逻辑下沉到 `core`，页面只做 `setData` 准备、事件转发、平台 API 调用。可自动化验证的部分：
 
-- `src/core` 与两个 Repo 实现 → Vitest（129 个测试）
-- 小程序工程结构、WXML 事件绑定、产物同步 → `npm run check:mp` / `check:core`
-- 页面交互与真机表现 → 需在微信开发者工具与真机上手测
+| 层 | 手段 | 规模 |
+|---|---|---|
+| `src/core` 纯逻辑 | Vitest | 129+ 个测试 |
+| 小程序 Repo（wx storage） | 接到与 Dexie 相同的契约测试 + 端到端导入/回滚 | `tests/wxRepo.test.ts` |
+| 小程序工程结构 | `npm run check:mp`（页面四件套、tabBar 图标、WXML 事件绑定、页面跳转目标） | 81 处绑定 / 7 处跳转 |
+| core 产物同步 | `npm run check:core`（src-core-hash 比对） | 2 个产物 |
+| PWA 端到端 | Playwright | 14 个用例 |
+| 页面交互与真机表现 | 微信开发者工具 + 真机手测 | 需人工 |
+
+> `e2e/` 里的用例一律用 `e2e/helpers.ts` 的 `dayOfCurrentMonth()` 生成日期，**不得硬编码年月**。
+> 曾因硬编码 2026-08 导致跨月后 8 个用例必然失败（与业务代码无关的时间炸弹）。
 
 ## 设计文档
 

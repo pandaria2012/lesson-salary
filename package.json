@@ -10,6 +10,7 @@
     "check:core": "node scripts/check-core-sync.mjs",
     "check:mp": "python scripts/check-mp-structure.py && python scripts/check-mp-bindings.py && python scripts/check-mp-nav.py",
     "verify": "npm run check:core && npm run check:mp && npm test && tsc --noEmit && tsc -p miniprogram/tsconfig.json --noEmit",
+    "verify:all": "npm run verify && npm run test:e2e",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"
