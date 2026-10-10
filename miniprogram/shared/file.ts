@@ -101,12 +101,34 @@ export function chooseExcelFile(): Promise<{ tempFilePath: string; name: string 
   })
 }
 
-/** 读取文件为 ArrayBuffer（SheetJS 需要 array 类型） */
+/**
+ * 读取文件为**标准** ArrayBuffer。
+ *
+ * ⚠️ 必须复制一次，不能直接返回 `res.data`。
+ *
+ * 原因（已在模拟器中实测确认）：小程序运行时里 `FileSystemManager.readFile`
+ * 返回的 ArrayBuffer **不满足 `instanceof ArrayBuffer`**（跨 realm / 非标准构造器）。
+ * 而 SheetJS 内部正是用 `instanceof ArrayBuffer` 判断输入类型，
+ * 判断失败后会走错解析分支 —— 表现为解析出空表：
+ *     同一份 17002 字节的 xlsx：
+ *       直接内存 buffer 解析     → sheet="上课记录", rows=5   ✅
+ *       经 readFile 返回后解析   → sheet="Sheet1",   rows=0   ❌
+ *       复制进 new ArrayBuffer() → 正常                      ✅
+ * 字节本身完全一致（逐一比对 identical=true），问题只在对象类型。
+ *
+ * 复制成本：一次 O(n) 拷贝，Excel 量级（几百 KB）可忽略。
+ */
 export function readFileAsArrayBuffer(filePath: string): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     FS().readFile({
       filePath,
-      success: res => resolve(res.data as ArrayBuffer),
+      success: res => {
+        const raw = res.data as ArrayBuffer
+        // 归一化为标准 ArrayBuffer，保证 SheetJS 的类型判断能通过
+        const normalized = new ArrayBuffer(raw.byteLength)
+        new Uint8Array(normalized).set(new Uint8Array(raw))
+        resolve(normalized)
+      },
       fail: err => reject(new Error(`读取文件失败：${err.errMsg ?? '未知错误'}`))
     })
   })

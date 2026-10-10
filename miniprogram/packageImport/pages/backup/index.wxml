@@ -32,7 +32,8 @@
     <block wx:if="{{pending}}">
       <view class="dup-warn" style="margin-top:10px">
         <view class="warn">已解析：{{pendingSummary}}</view>
-        <view class="muted">合并会保留现有数据并按记录 id 去重；覆盖会先清空本机数据。</view>
+        <view class="muted">备份创建时间：{{pendingCreatedAt}}</view>
+        <view class="muted" style="margin-top:4px">合并会保留现有数据并按记录 id 去重；覆盖会先清空本机数据。</view>
       </view>
       <view class="btn block" bindtap="onRestore" data-mode="merge">合并恢复（推荐）</view>
       <view class="btn danger block" style="margin-top:8px" bindtap="onRestore" data-mode="overwrite">覆盖恢复（危险）</view>

@@ -1,3 +1,4 @@
+import { normalizeDate } from '../core/index'
 import type { CourseType, ImportBatch, LessonRecord } from '../core/index'
 import type { Repo } from '../core/index'
 import {
@@ -82,12 +83,28 @@ export function createWxRepo(): Repo {
     },
 
     async saveRecord(r) {
-      const month = (r.date || '').slice(0, 7)
-      if (!month) throw new Error('记录缺少日期，无法按月存储')
+      // 存储层守门：月份分片依赖 date 严格为 YYYY-MM-DD。
+      // 若直接 slice(0,7)，'2026/8/12' 会生成 'ls:records:2026/8/' 畸形分片，
+      // 记录能存进去但不会出现在任何月份的汇总里 —— 静默丢数据。
+      // 因此在此强制规范化；无法识别则明确报错，不写坏分片。
+      const date = normalizeDate(r.date)
+      if (!date) {
+        throw new Error(`记录日期无法识别（${r.date || '空'}），请检查日期格式`)
+      }
+      const normalized: LessonRecord = date === r.date ? r : { ...r, date }
+      const month = date.slice(0, 7)
+
+      // 记录可能已存在于**另一个月份分片**（改了日期，或日期写法不同导致落到别的片）。
+      // 必须按 id 反查其当前所在分片并移除，否则会留下重复副本。
+      const oldMonth = findRecordMonth(r.id)
+      if (oldMonth && oldMonth !== month) {
+        writeMonth(oldMonth, readMonth(oldMonth).filter(x => x.id !== r.id))
+      }
+
       const rows = readMonth(month)
       const i = rows.findIndex(x => x.id === r.id)
-      if (i === -1) rows.push(r)
-      else rows[i] = r
+      if (i === -1) rows.push(normalized)
+      else rows[i] = normalized
       writeMonth(month, rows)
     },
 

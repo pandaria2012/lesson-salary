@@ -1,3 +1,4 @@
+import { fmtDateTime } from '../../core/index'
 import { repo } from '../../shared/repo-singleton'
 import { storageInfo, usedBytes, STORAGE_LIMIT_BYTES } from '../../shared/store'
 import { confirmDanger, errMsg, toast, toastOk } from '../../shared/ui'
@@ -33,7 +34,8 @@ Page({
       const last = await getLastBackupAt()
       const used = usedBytes()
       this.setData({
-        lastBackupAt: last ? last.slice(0, 10) : '从未备份',
+        // 完整到秒（本地时区）；fmtDateTime 对非法值返回空串，回落到"从未备份"
+        lastBackupAt: fmtDateTime(last ?? '') || '从未备份',
         remindDisabled: await isRemindDisabled(),
         showRemindBanner: await needsBackupReminder(),
         storageUsed: this.fmtSize(used),

@@ -103,6 +103,38 @@ describe('wx 存储层：分片与容量', () => {
       await repo.saveRecord(makeRec({ id: 'r1' }))
     })).rejects.toThrow(/本地存储写入失败/)
   })
+
+  it('非标准日期被规范化，不产生畸形月份分片', async () => {
+    const repo = createWxRepo()
+    // '2026/8/12' 若直接 slice(0,7) 会变成 '2026/8/' —— 记录将不属于任何月份，汇总里看不到
+    await repo.saveRecord(makeRec({ id: 'r1', date: '2026/8/12' }))
+
+    expect(storage.has('ls:records:2026-08')).toBe(true)
+    const badKeys = [...storage.keys()]
+      .filter(k => k.startsWith('ls:records:') && !/^ls:records:(\d{4}-\d{2}|index)$/.test(k))
+    expect(badKeys).toEqual([])
+
+    const rows = await repo.listRecords('2026-08')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].date).toBe('2026-08-12')
+  })
+
+  it('无法识别的日期明确报错，不写入坏数据', async () => {
+    const repo = createWxRepo()
+    await expect(repo.saveRecord(makeRec({ id: 'r1', date: '08-14' })))
+      .rejects.toThrow(/日期无法识别/)
+    expect([...storage.keys()].filter(k => k.startsWith('ls:records:'))).toEqual([])
+  })
+
+  it('日期月份改变后不会在旧分片留下副本', async () => {
+    const repo = createWxRepo()
+    await repo.saveRecord(makeRec({ id: 'r1', date: '2026-08-12' }))
+    await repo.saveRecord(makeRec({ id: 'r1', date: '2026/9/1' }))
+    const all = await repo.listRecords()
+    expect(all.filter(r => r.id === 'r1')).toHaveLength(1)
+    expect(all[0].date).toBe('2026-09-01')
+    expect(storage.has('ls:records:2026-08')).toBe(false)
+  })
 })
 
 describeRepoContract('wxRepo (wx storage 模拟)', () => {

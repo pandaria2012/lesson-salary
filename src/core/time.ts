@@ -97,3 +97,50 @@ export function nextHalfHour(now = new Date()): string {
   const rounded = (total % 60 === 0 ? total + 30 : Math.ceil(total / 30) * 30) % (24 * 60)
   return `${pad2(Math.floor(rounded / 60))}:${pad2(rounded % 60)}`
 }
+
+/**
+ * 把任意常见日期写法规范化为 'YYYY-MM-DD'；无法识别返回 null。
+ *
+ * 用途：**存储层守门**。记录按月分片依赖 `date` 严格是 YYYY-MM-DD，
+ * 否则 `date.slice(0, 7)` 会产生 '2026/8/' 这类畸形分片 ——
+ * 记录虽然"存进去了"，却不会出现在任何月份的汇总里（静默丢失数据）。
+ *
+ * 比 parseExcelDate 更宽松，因为还要兜住手工编辑过的备份文件：
+ *   '2026-08-12' / '2026/8/12' / '2026.8.12' / '2026年8月12日'
+ *   '2026-08-12 13:00' / '2026-08-12T13:00:00'（只取日期部分）
+ *   Date 对象、Excel 序列号
+ */
+export function normalizeDate(value: unknown): string | null {
+  if (value === null || value === undefined) return null
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null
+    return toDateStr(value.getFullYear(), value.getMonth() + 1, value.getDate())
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    // 与 parseExcelDate 一致：按 Excel 序列号解释（1899-12-30 起算）
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.round(value) * 86400000)
+    return toDateStr(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate())
+  }
+
+  if (typeof value !== 'string') return null
+  const s = value.trim()
+  if (!s) return null
+
+  // 已是标准格式（含尾部时间的写法），直接复用其年月日
+  const strict = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/)
+  if (strict) {
+    const mo = Number(strict[2]), d = Number(strict[3])
+    return (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) ? `${strict[1]}-${strict[2]}-${strict[3]}` : null
+  }
+
+  // 宽松格式：分隔符 - / . 年月日，允许尾部跟时间
+  const loose = s.match(/^(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?(?:[ T].*)?$/)
+  if (loose) {
+    const y = Number(loose[1]), mo = Number(loose[2]), d = Number(loose[3])
+    return (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) ? toDateStr(y, mo, d) : null
+  }
+
+  return null
+}

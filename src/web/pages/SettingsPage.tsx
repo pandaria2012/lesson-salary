@@ -6,6 +6,7 @@ import { listCourseTypes, listRecords, repo } from '../db/repo'
 import { createExportAllWorkbook, parseBackupWorkbook } from '../../core/workbook'
 import { openLastExport, saveWorkbook } from '../../lib/export'
 import { restoreBackup } from '../../core/services/restoreService'
+import { fmtFileStamp } from '../../core/format'
 import type { CourseType, LessonRecord } from '../../core/types'
 
 type BackupData = { records: LessonRecord[]; courseTypes: CourseType[] }
@@ -44,7 +45,8 @@ export default function SettingsPage({ onOpenInstallGuide }: { onOpenInstallGuid
     showOk('正在生成 Excel…')
     try {
       const [records, courseTypes] = await Promise.all([listRecords(), listCourseTypes()])
-      const res = await saveWorkbook(createExportAllWorkbook(records, courseTypes), `课时薪资-全部数据-${new Date().toISOString().slice(0, 10)}.xlsx`)
+      // 文件名用本地时间精确到秒：避免 toISOString() 的 UTC 跨日错位，也避免同日多次备份互相覆盖
+      const res = await saveWorkbook(createExportAllWorkbook(records, courseTypes), `课时薪资-全部数据-${fmtFileStamp(new Date())}.xlsx`)
       if (res === 'cancelled') showOk('已取消导出')
       else if (res === 'shared') showOk('已通过系统分享/存储')
       else if (res === 'saved') showOk('已保存')

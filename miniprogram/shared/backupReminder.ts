@@ -1,3 +1,4 @@
+import { fmtDateTime } from '../core/index'
 import { repo } from './repo-singleton'
 
 /**
@@ -62,8 +63,9 @@ export async function maybeShowBackupReminder(): Promise<void> {
   try {
     if (!(await needsBackupReminder())) return
     const last = await getLastBackupAt()
-    const detail = last
-      ? `上次导出备份是 ${last.slice(0, 10)}，已超过 30 天。`
+    const lastText = fmtDateTime(last ?? '')
+    const detail = lastText
+      ? `上次导出备份是 ${lastText}，已超过 30 天。`
       : '你还没有导出过备份。'
 
     wx.showModal({

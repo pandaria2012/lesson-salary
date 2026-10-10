@@ -1,4 +1,4 @@
-import { restoreBackup } from '../../../core/index'
+import { fmtFileStamp, restoreBackup } from '../../../core/index'
 import {
   createExportAllWorkbook, parseBackupWorkbook, workbookToArrayBuffer
 } from '../../core-workbook'
@@ -13,6 +13,7 @@ type RestoreMode = 'merge' | 'overwrite'
 interface PendingBackup {
   records: LessonRecord[]
   courseTypes: CourseType[]
+  createdAt: string | null
 }
 
 /**
@@ -27,6 +28,7 @@ Page({
     courseTypeCount: 0,
     pending: null as PendingBackup | null,
     pendingSummary: '',
+    pendingCreatedAt: '',
     busy: false,
     msg: '',
     msgClass: 'ok'
@@ -56,9 +58,11 @@ Page({
       const [records, courseTypes] = await Promise.all([repo.listRecords(), repo.listCourseTypes()])
       const wb = createExportAllWorkbook(records, courseTypes)
       const buf = workbookToArrayBuffer(wb)
-      const date = new Date().toISOString().slice(0, 10)
+      // 文件名用「本地时间、精确到秒」：避免 UTC 跨日错位，也避免同日多次备份互相覆盖。
+      // 不用冒号（文件名非法字符），故用 fmtFileStamp 的 YYYY-MM-DD_HHmmss。
+      const stamp = fmtFileStamp(new Date())
       hideLoading()
-      const res = await saveAndPresent(buf, `课时备份-${date}.xlsx`)
+      const res = await saveAndPresent(buf, `课时备份-${stamp}.xlsx`)
 
       if (res === 'opened' || res === 'shared') {
         // 只有真正产出了文件才记录备份时间，避免"点了但没存"造成误判
@@ -102,7 +106,9 @@ Page({
 
       this.setData({
         pending: backup,
-        pendingSummary: `记录 ${backup.records.length} 条，课程类型 ${backup.courseTypes.length} 个`
+        pendingSummary: `记录 ${backup.records.length} 条，课程类型 ${backup.courseTypes.length} 个`,
+        // 展示备份文件自身的创建时间，便于用户确认选对了哪一份备份
+        pendingCreatedAt: backup.createdAt ?? '未知（该文件未记录创建时间）'
       })
       this.setMsg('解析完成，请选择恢复方式。', 'ok')
     } catch (err) {

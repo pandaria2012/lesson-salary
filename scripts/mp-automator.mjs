@@ -256,11 +256,87 @@ async function smoke(mp) {
     return `totalAmount=${d.totalAmount} totalCount=${d.totalCount}`
   })
 
+  // ---- Excel 读写链路（分包 SheetJS）----
+  // 必须在**分包页面**上下文里 require core-workbook：evaluate 跑在 app service，
+  // 主包作用域看不到分包模块。
+  await check('分包 SheetJS 可用 + xlsx 写→读往返', async () => {
+    await mp.navigateTo('/packageImport/pages/backup/index')
+    await new Promise(r => setTimeout(r, 1200))
+    const r = await mp.evaluate(async () => {
+      const W = require('packageImport/core-workbook.js')
+      const when = new Date(2026, 7, 10, 13, 5, 9)
+      const wb = W.createExportAllWorkbook(
+        [{ id: 'smoke', courseTypeId: null, courseTypeName: '冒烟', courseTypeKind: '',
+           rate: 100, student: '往返测试', date: '2026-08-10', startTime: '13:00',
+           endTime: '15:00', hours: 2, status: 'normal', source: 'manual',
+           batchId: null, note: '中文备注', createdAt: 'T' }],
+        [], { createdAt: when }
+      )
+      const buf = W.workbookToArrayBuffer(wb)
+      // 经文件系统往返（覆盖 readFile 返回非标准 ArrayBuffer 的坑）
+      const p = `${wx.env.USER_DATA_PATH}/smoke-bk.xlsx`
+      const fs = wx.getFileSystemManager()
+      fs.writeFileSync(p, buf)
+      const raw = fs.readFileSync(p)
+      const normalized = new ArrayBuffer(raw.byteLength)
+      new Uint8Array(normalized).set(new Uint8Array(raw))
+      const back = await W.parseBackupWorkbook(normalized)
+      return {
+        bytes: buf.byteLength,
+        createdAt: back.createdAt,
+        records: back.records.length,
+        chineseOk: back.records[0] && back.records[0].note === '中文备注'
+      }
+    })
+    if (r.records !== 1) throw new Error(`记录数应为 1，实际 ${r.records}`)
+    if (r.createdAt !== '2026-08-10 13:05:09') throw new Error(`创建时间不符：${r.createdAt}`)
+    if (!r.chineseOk) throw new Error('中文未正确往返')
+    return `${r.bytes} 字节，创建时间 ${r.createdAt}`
+  })
+
+  await check('⚠️ 非标准日期被规范化（防畸形分片/静默丢数据）', async () => {
+    const r = await mp.evaluate(async () => {
+      const C = require('core/index.js')
+      const repo = require('shared/repo-singleton.js')
+      for (const k of wx.getStorageInfoSync().keys) { try { wx.removeStorageSync(k) } catch (e) { /* ignore */ } }
+
+      let threw = ''
+      try {
+        await repo.repo.saveRecord({
+          id: 'bad', courseTypeId: null, courseTypeName: 'x', courseTypeKind: '', rate: 1,
+          student: 's', date: '08-14', startTime: null, endTime: null, hours: 1,
+          status: 'normal', source: 'manual', batchId: null, note: '', createdAt: 'T'
+        })
+      } catch (e) { threw = e.message }
+
+      await repo.repo.saveRecord({
+        id: 'ok', courseTypeId: null, courseTypeName: 'x', courseTypeKind: '', rate: 200,
+        student: '张三', date: '2026/8/12', startTime: null, endTime: null, hours: 2,
+        status: 'normal', source: 'manual', batchId: null, note: '', createdAt: 'T'
+      })
+
+      const keys = wx.getStorageInfoSync().keys
+      const badShards = keys.filter(k => k.startsWith('ls:records:') && k !== 'ls:records:index' && !/^ls:records:\d{4}-\d{2}$/.test(k))
+      const rows = await repo.repo.listRecords('2026-08')
+      return {
+        rejected: !!threw,
+        badShards,
+        shard: rows.map(x => x.date),
+        amount: C.summarize(rows).totalAmount
+      }
+    })
+    if (!r.rejected) throw new Error('非法日期应被拒绝')
+    if (r.badShards.length) throw new Error(`出现畸形分片：${r.badShards.join(', ')}`)
+    if (r.shard[0] !== '2026-08-12') throw new Error(`日期未规范化：${r.shard[0]}`)
+    if (r.amount !== 400) throw new Error(`金额应为 400，实际 ${r.amount}`)
+    return `非法被拒 / 规范化 ${r.shard[0]} / 金额 ${r.amount}`
+  })
+
   // 清理冒烟数据
   await check('清理冒烟数据', async () => {
-    await mp.callWxMethod('removeStorageSync', 'ls:records:2026-10')
-    await mp.callWxMethod('removeStorageSync', 'ls:records:index')
-    await mp.callWxMethod('removeStorageSync', 'ls:courseTypes')
+    await mp.evaluate(() => {
+      for (const k of wx.getStorageInfoSync().keys) { try { wx.removeStorageSync(k) } catch (e) { /* ignore */ } }
+    })
     return 'ok'
   })
 

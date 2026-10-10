@@ -64,6 +64,54 @@ describe('createExportAllWorkbook / parseBackupWorkbook', () => {
   })
 })
 
+describe('备份创建时间（YYYY-MM-DD HH:mm:ss）', () => {
+  it('导出写入的创建时间是本地时区、格式正确', () => {
+    const when = new Date(2026, 7, 10, 13, 5, 9)   // 本地 2026-08-10 13:05:09
+    const wb = createExportAllWorkbook([rec], [ct], { createdAt: when })
+    expect(wb.Props?.Subject).toContain('2026-08-10 13:05:09')
+    // 明确不应出现 UTC 日期错位（UTC+8 下 13:05 的 UTC 仍是同日，此处用午夜色验证见下一例）
+    expect(wb.Props?.Subject).not.toContain('T13:05:09')
+  })
+
+  it('⚠️ 本地午夜前的备份时间不使用 UTC 日期', () => {
+    const early = new Date(2026, 7, 10, 0, 30, 0)
+    const wb = createExportAllWorkbook([rec], [ct], { createdAt: early })
+    expect(wb.Props?.Subject).toContain('2026-08-10 00:30:00')
+  })
+
+  it('导出 → 解析可还原创建时间（往返）', async () => {
+    const when = new Date(2026, 7, 10, 13, 5, 9)
+    const wb = createExportAllWorkbook([rec], [ct], { createdAt: when })
+    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    const back = await parseBackupWorkbook(buf)
+    expect(back.createdAt).toBe('2026-08-10 13:05:09')
+    // 原有数据解析不受影响
+    expect(back.records[0]).toMatchObject({ id: 'r1', student: '张三', hours: 2 })
+    expect(back.courseTypes).toHaveLength(1)
+  })
+
+  it('老备份文件（无创建时间）返回 null 而非报错', async () => {
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+      ['课程类型', '课程单价', '学生名称', '上课日期', '上课时间', '课时'],
+      ['1对1', 200, '张三', '2026-08-10', '13:00-15:00', 2]
+    ]), '上课记录')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+      ['名称', '教学形式', '状态', '默认课时', '默认时薪', '创建时间'],
+      ['1对1', '一对一', 'enabled', 2, 200, 't']
+    ]), '课程类型')
+    const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    const back = await parseBackupWorkbook(buf)
+    expect(back.createdAt).toBeNull()
+    expect(back.records).toHaveLength(1)
+  })
+
+  it('未显式传 createdAt 时也会写入当前时间', () => {
+    const wb = createExportAllWorkbook([rec], [ct])
+    expect(wb.Props?.Subject).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)
+  })
+})
+
 describe('createMonthlyWorkbook', () => {
   it('含汇总与明细两个 sheet', () => {
     const wb = createMonthlyWorkbook([rec], [{ label: '张三', hours: 2, amount: 400, count: 1 }])
