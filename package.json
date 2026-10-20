@@ -14,6 +14,7 @@
     "mp:smoke": "node scripts/mp-automator.mjs",
     "mp:smoke:shot": "node scripts/mp-automator.mjs --shot",
     "mp:check": "node scripts/mp-automator.mjs --check",
+    "mp:shots": "node scripts/mp-screenshots.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"
